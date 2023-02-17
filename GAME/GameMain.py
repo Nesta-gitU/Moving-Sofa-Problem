@@ -3,6 +3,8 @@ import Shape
 from Coordinate import Coordinate
 from PIL import Image 
 import matplotlib.pyplot as plt
+from pynput import keyboard
+import msvcrt
 
 def main():
     board = Board.Board()
@@ -20,16 +22,13 @@ def main():
     plt.show()
 
 
-
 # temporary way to make shapes
 def setSquare(shape):
 
-    for x in range(20 ,61):
+    for x in range(20  ,61):
         for y in range(40,61):
             shape.coordinateList.append(Coordinate(x,y))
         
-
-
     
 
 if __name__ == "__main__":
