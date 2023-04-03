@@ -125,8 +125,6 @@ class Shape:
         
         newPolygon = Polygon(newPoints)
 
-        print(self.collisionCheck(board, newPolygon))
-
         if not self.collisionCheck(board, newPolygon):
             self.polygon = newPolygon
             self.forward_point = affinity.translate(self.forward_point, xoff = pointToAdd.x, yoff = pointToAdd.y)

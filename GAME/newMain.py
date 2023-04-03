@@ -13,7 +13,10 @@ pygame.init()
 #clock = pygame.time.Clock()
 
 MOVEEVENT = pygame.USEREVENT + 1 # this is just defining some event that we can use later (with integer key)
-pygame.time.set_timer(MOVEEVENT, 40)
+pygame.time.set_timer(MOVEEVENT, 20)
+
+# use the font arial
+
 # create a surface object, image is drawn on it.
 def run():
     point_list = getPointList()
@@ -36,6 +39,7 @@ def run():
 
                 board.setShape(shape)
                 board.show()
+            
 
             if event.type == pygame.KEYDOWN:
                 print(event.type)
@@ -43,6 +47,8 @@ def run():
                     shape.rotate(board, -3)
                 elif event.key == pygame.K_DOWN:
                     shape.rotate(board, 3)
+                elif event.key == pygame.K_LEFT:
+                    shape.moveForward(board, 10)
                 
                 board.setShape(shape)
                 board.show()

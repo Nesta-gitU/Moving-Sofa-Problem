@@ -16,6 +16,11 @@ class Board:
     self.forward_circle_color = (0, 255, 0)  # green
     self.polygon_thickness = 2
     self.exterior_coords = []
+    self.forward_circle_coords = []
+    self.value = None
+
+    self.font = pygame.font.SysFont('arial', 24)
+
   
     # set up the view window
     self.scrn = pygame.display.set_mode((self.BOARDSIZE, self.BOARDSIZE))
@@ -26,10 +31,10 @@ class Board:
     # set the pygame window name
     pygame.display.set_caption('Moving Couch')
 
-  def get_abs_distance_value(self, shape) -> int:
+  def get_distance_value(self, shape) -> int:
     # return the absolute distance from the shape to the finish line. the finish line is boundary4
-    
-    return 6
+    distance = shape.polygon.distance(self.boundaries[3])
+    return distance
 
 
   def show(self):
@@ -39,19 +44,28 @@ class Board:
     # show updated image
     # Create a Pygame surface from the NumPy array
     # set the polygon color and thickness
+    # dont need to redraw the boundaries since they are static
     
 
     # draw the polygon on the screen
     pygame.draw.polygon(self.scrn, self.polygon_color, self.exterior_coords, self.polygon_thickness)
 
+    # draw the forward circle on the screen
     pygame.draw.polygon(self.scrn, self.forward_circle_color, self.forward_circle_coords, self.polygon_thickness)
+
+    # display the value function
+    img = self.font.render('Distance = ' + str(self.distance_value), True, (0, 0, 255))
+    self.scrn.blit(img, (10, 350))
+
+
  
     # paint screen one time
     pygame.display.update()
 
     #print the array
     #print(self.grid) 
-
+  
+  #this is just the function that sets the things we display above so maybe different name should be better
   def setShape(self, shape):
     # first wipe away the previous shape and reset bounds
     self.scrn.fill((255, 255, 255))
@@ -65,6 +79,9 @@ class Board:
 
     # set the forward circle for the board
     self.forward_circle_coords = list(forward_point.buffer(10).exterior.coords)
+
+    # set the value 
+    self.distance_value = self.get_distance_value(shape)
 
     #print('shape points list:', shape.getExteriorCoords())
     #print(validation.explain_validity(shape.polygon))
