@@ -2,21 +2,35 @@ import numpy as np
 from PIL import Image 
 import matplotlib.pyplot as plt
 import pygame
+from shapely.geometry import Point, Polygon, box, LineString
+from shapely import validation
 
 #Board should only be for display. And to store the boundaries. 
 #So like the display in the snake game
 class Board:
-  BOARDSIZE = 400
+  SCALE = 100
+  BOARDSIZE = 6 * SCALE
 
   def __init__(self):
-    self.grid = np.zeros(shape = (self.BOARDSIZE, self.BOARDSIZE))
-    self.setBounds()
-
+    self.polygon_color = (0, 0, 255)  # blue
+    self.forward_circle_color = (0, 255, 0)  # green
+    self.polygon_thickness = 2
+    self.exterior_coords = []
+  
     # set up the view window
     self.scrn = pygame.display.set_mode((self.BOARDSIZE, self.BOARDSIZE))
+
+    # sceen is needed to set bounds
+    self.setBounds()
  
     # set the pygame window name
-    pygame.display.set_caption('image')
+    pygame.display.set_caption('Moving Couch')
+
+  def get_abs_distance_value(self, shape) -> int:
+    # return the absolute distance from the shape to the finish line. the finish line is boundary4
+    
+    return 6
+
 
   def show(self):
     #update the array before showing
@@ -24,10 +38,13 @@ class Board:
     
     # show updated image
     # Create a Pygame surface from the NumPy array
-    surface = pygame.surfarray.make_surface(self.grid * 255)
- 
-    # Using blit to copy content from one surface to other
-    self.scrn.blit(surface, (0, 0))
+    # set the polygon color and thickness
+    
+
+    # draw the polygon on the screen
+    pygame.draw.polygon(self.scrn, self.polygon_color, self.exterior_coords, self.polygon_thickness)
+
+    pygame.draw.polygon(self.scrn, self.forward_circle_color, self.forward_circle_coords, self.polygon_thickness)
  
     # paint screen one time
     pygame.display.update()
@@ -37,24 +54,48 @@ class Board:
 
   def setShape(self, shape):
     # first wipe away the previous shape and reset bounds
-    self.grid = np.zeros(shape = (self.BOARDSIZE, self.BOARDSIZE))
+    self.scrn.fill((255, 255, 255))
     self.setBounds()
 
-    # set the shape
-    for coordinate in shape.coordinateList:
-      self.grid[round(coordinate.x), round(coordinate.y)] = 1
+    # set the shape for the board
+    self.exterior_coords = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords()]
 
+    # get the forward point for the board
+    forward_point = Point(shape.getForwardPoint().x * self.SCALE, shape.getForwardPoint().y * self.SCALE) 
 
-  def setBounds(self):
-    order = len(str(self.BOARDSIZE)) 
-    zeros = order - 1
-    corridorSize = 10**zeros
+    # set the forward circle for the board
+    self.forward_circle_coords = list(forward_point.buffer(10).exterior.coords)
+
+    #print('shape points list:', shape.getExteriorCoords())
+    #print(validation.explain_validity(shape.polygon))
     
 
 
-    self.grid[:, 0] = 1
-    self.grid[0:(self.BOARDSIZE - corridorSize), corridorSize] = 1
-    self.grid[(self.BOARDSIZE - corridorSize), corridorSize:self.BOARDSIZE] = 1
-    self.grid[self.BOARDSIZE - 1, :] = 1
+  def setBounds(self):
+    # -1's cause the booard is 4*100 but the last pixel is 399
 
+    #the boundaries have different types but they should all have the .intersects method
+    boundary1 = Polygon([(0, 1), (3-0.01, 1), (3-0.01, 4-0.01), (0, 4-0.01)])
+    boundary2 = Polygon([(0, 0), (4-0.01, 0), (4-0.01, -4-0.01), (0, -4-0.01)])
+    boundary3 = Polygon([(4-0.01, 0), (4-0.01, 4-0.01), (8-0.01, 4-0.01), (0, -4-0.01)]) # right most boundary
+    
+    boundary4 = Polygon([(3, 4-0.01), (4, 4-0.01), (4, 5-0.01), (3, 5-0.01),]) # bottom small boundary
+    boundary5 = Polygon([(0, 0), (0, 1), (-1, 1), (-1, 0)]) # left small boundary
 
+    display_boundary1 = Polygon([(0, 1*self.SCALE), (3*self.SCALE-1, 1*self.SCALE), (3*self.SCALE-1, 4*self.SCALE-1), (0, 4*self.SCALE-1)]) # this returns a polygon object
+    display_boundary2 = Polygon([(0, 0), (4*self.SCALE-1, 0), (4*self.SCALE-1, -4*self.SCALE-1), (0, -4*self.SCALE-1)])
+    display_boundary3 = Polygon([(4*self.SCALE-1, 0), (4*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 0)])
+    display_boundary4 = Polygon([(3*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 5*self.SCALE-1), (3*self.SCALE, 5*self.SCALE-1),])
+    display_boundary5 = Polygon([(0, 0), (0, 1*self.SCALE), (-1*self.SCALE, 1*self.SCALE), (-1*self.SCALE, 0)])
+    
+ 
+    self.boundaries = [boundary1, boundary2, boundary3, boundary4, boundary5]
+
+    # This is ugly but fine since we will never have more than these 5 boundaries
+    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary1.exterior.coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary2.exterior.coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary3.exterior.coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, (150, 0, 0), display_boundary4.exterior.coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
+
+ 
