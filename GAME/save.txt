@@ -1,0 +1,42 @@
+ while status:
+        for event in pygame.event.get():
+            #clock.tick(10)
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    shape.moveHorizontal(board, -0.2)
+                elif event.key == pygame.K_RIGHT:
+                    shape.moveHorizontal(board, 0.2)
+                elif event.key == pygame.K_UP:
+                    shape.moveVertical(board, -0.2)
+                elif event.key == pygame.K_DOWN:
+                    shape.moveVertical(board, 0.2)
+                elif event.key == pygame.K_r:
+                    shape.rotate(board, 5)
+                elif event.key == pygame.K_t:
+                    shape.rotate(board, -5)
+                
+                board.setShape(shape)
+                board.show()
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                # if I ever use this again just tranlate the mous input keep everything in shape the 1.00 scale. 
+                mousePoint = Point(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+
+                shape.moveTowardsPoint(board, mousePoint, distance=0.1)
+                
+                board.setShape(shape)
+                board.show()
+
+            
+
+
+            
+            
+ 
+        # if event object type is QUIT
+        # then quitting the pygame
+        # and program both.
+            if event.type == pygame.QUIT:
+                status = False
+

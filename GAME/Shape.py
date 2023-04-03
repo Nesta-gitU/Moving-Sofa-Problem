@@ -1,144 +1,174 @@
 import numpy as np
 from math import radians, sin, cos
 import math
-from Coordinate import Coordinate
 import copy
-# shape array contains all the "turned on" coordinates for the shape used only the outline I guess the rest is kind of useless
-# need to make sure the starting shape connects
+from shapely.geometry import Point, Polygon, LineString
+from shapely import affinity
+from shapely import validation
+import shapely
+import pygame
+
+# polygon object to represent the shape, this class has some wrappers and additional functionality
 class Shape:
 
-    def __init__(self):
-        self.coordinateList = list()
+    def __init__(self, polygon):
+        self.polygon = polygon
+        self.collision_bound = None
+        self.set_forward_point()
+    
+    def collisionCheck(self, board, newPolygon):
+        #return False
+        #the first boundary is always the polygon the others are lines
+    
+            #print('overlaps: ', boundary.overlaps(newPolygon))
+            #print('touches: ', boundary.touches(newPolygon))
+            #print('within: ', newPolygon.within(boundary))
+            #print('contains: ', boundary.contains(newPolygon))
+            #print('contains: ', newPolygon.contains(boundary))
+            #print('crosses: ', boundary.crosses(newPolygon))
+            #print('intersects: ', newPolygon.intersects(boundary))
+        if(self.intersectionCollision(board, newPolygon)):
+            return True
+            
+        return self.lineCollision(board, newPolygon)
+    
+    def intersectionCollision(self, board, newPolygon):
+        for boundary in board.boundaries:
+            if newPolygon.overlaps(boundary) and not newPolygon.touches(boundary):
+                self.collision_bound = boundary
+                return True 
+        return False
         
-    # note for later: I stole this code from stackoverflow
-    def rotate(self, angle = 10):
-        """Rotates the given polygon which consists of corners represented as (x,y)
-        around center_point (origin by default)
-        Rotation is counter-clockwise
-        Angle is in degrees
-        """
+    def lineCollision(self, board, newPolygon):
+        #return False
+        newPolygon_coords = list(newPolygon.exterior.coords)
 
-        #get avg of all the points (approximation of the centroid)
-        x = [coordinate.x for coordinate in self.coordinateList]
-        y = [coordinate.y for coordinate in self.coordinateList]
-        
-        coordinateAvg = Coordinate(sum(x) / len(self.coordinateList), sum(y) / len(self.coordinateList))
+        for i in range(len(self.getExteriorCoords())):
+            line = LineString([newPolygon_coords[i], self.getExteriorCoords()[i]])
 
-        rotated_polygon = []
-        print((angle, (coordinateAvg.x, coordinateAvg.y)))
-        for corner in self.coordinateList:
-            rotated_corner = self.rotate_point((corner.x, corner.y), angle, (coordinateAvg.x, coordinateAvg.y))
-            rotated_polygon.append(rotated_corner)
-
-        self.coordinateList = rotated_polygon
-
-    # note for later: I stole this code from stackoverflow
-    def rotate_point(self, point, angle, center_point):
-        """Rotates a point around center_point(origin by default)
-        Angle is in degrees.
-        Rotation is counter-clockwise
-        """
-        angle_rad = radians(angle % 360)
-
-        # Shift the point so that center_point becomes the origin
-        new_point = (point[0] - center_point[0], point[1] - center_point[1])
-        new_point = (new_point[0] * cos(angle_rad) - new_point[1] * sin(angle_rad),
-                 new_point[0] * sin(angle_rad) + new_point[1] * cos(angle_rad))
-
-        # Reverse the shifting we have done and round to nearest integer
-        new_point = (new_point[0] + center_point[0], new_point[1] + center_point[1])
-
-        # turn the point into a coordinate
-        new_coordinate = Coordinate(new_point[0], new_point[1])
-
-        return new_coordinate
-
-    def collisionCheck(self, board, coordinateList):
-        for coordinate in coordinateList:
-            if coordinate.isOutOfBounds(board):
-                return True
+            for boundary in board.boundaries:
+                if line.intersects(boundary) and not line.touches(boundary):
+                    self.collision_bound = boundary
+                    return True
         return False
 
-    def traceCollisionCheck(self, board, newCoordinateList):
-        # Initialize a flag to indicate whether the line between the points has crossed the boundary
-        crossed = False
+    # maybe if a collision occurs it should move against the wall, or I should just give the NEAT access to distance parameter 
+    def moveHorizontal(self, board, distance = 0.5):
+        
+            
+        newPolygon = affinity.translate(self.polygon, xoff = distance)
+        
+        if not self.collisionCheck(board, newPolygon):
+            # possibly move the self list to against the barrier idk if thats smart
+            self.polygon = newPolygon
 
-        for coordinate in newCoordinateList:
-            # Iterate through each boundary segment (so board.boundary should be a field containing all the boundaries as [((0,0), (0,1)), ((0,1), (1,1)), ((1,1), (1,0)), ((1,0), (0,0))])
-            for boundary_segment in board.boundary:
-            # Check if the line between the points intersects the boundary segment
-                intersection_point = self.intersection((coordinate.x, coordinate.y), boundary_segment)
-                if intersection_point is not None:
-                    # The line between the points intersects the boundary segment
-                    crossed = True
-                    break
+        else:
+            if distance > 0:
+                # get highest x value of the newPolygon
+                # bounds returns min x, min y, max x, max y.
+                max_x = newPolygon.bounds[2]
 
-        # Print the result
-        return crossed
+                # compute the needed correction (just as a test for now) -> max_x > 4-0.01 because we had a collision
+                correction = (4 - 0.01) - max_x
+
+                # correct movement
+                self.polygon = affinity.translate(newPolygon, xoff =  correction)
+
+            else:
+                # get lowest x value of newPolygon
+                # bounds returns min x, min y, max x, max y.
+                min_x = newPolygon.bounds[0]
+                
+                correction = self.collision_bound.bounds[2] - min_x
+
+                # correct movement
+                self.polygon = affinity.translate(newPolygon, xoff =  correction)
+
+        # maybe if a collision occurs it should move against the wall, or I should just give the NEAT access to distance parameter 
     
+    def moveVertical(self, board, distance = 0.5):
+        
+        newPoints = []
+        for point in self.polygon.exterior.coords:
+            newPoint = Point(point[0], point[1] + distance)
+            newPoints.append(newPoint)
+        
+        newPolygon = Polygon(newPoints)
+        
+        if not self.collisionCheck(board, newPolygon):
+            # possibly move the self list to against the barrier idk if thats smart
+            self.polygon = newPolygon
+        else:
+            if distance < 0:
+                # bounds returns min x, min y, max x, max y.
+                min_y = newPolygon.bounds[1]
+                correction = self.collision_bound.bounds[3] - min_y
+                self.polygon = affinity.translate(newPolygon, yoff = correction)
+
+            else:
+                max_y = newPolygon.bounds[3]
+                correction = self.collision_bound.bounds[1] - max_y
+                self.polygon = affinity.translate(newPolygon, yoff =  correction)
+    
+    def moveTowardsPoint(self, board, coordinate, distance = 0.5):
+        centeredPoint = Point(coordinate.x - self.polygon.centroid.x, coordinate.y - self.polygon.centroid.y)
+
+        norm_point = self.normalize(centeredPoint)
+
+        pointToAdd = Point(norm_point.x * distance, norm_point.y * distance)
+        #print(norm_point.x, norm_point.y)
+
+        newPoints = []
+        for point in self.polygon.exterior.coords:
+            newPoint = Point(point[0] + pointToAdd.x, point[1] + pointToAdd.y)
+            newPoints.append(newPoint)
+        
+        newPolygon = Polygon(newPoints)
+
+        print(self.collisionCheck(board, newPolygon))
+
+        if not self.collisionCheck(board, newPolygon):
+            self.polygon = newPolygon
+            self.forward_point = affinity.translate(self.forward_point, xoff = pointToAdd.x, yoff = pointToAdd.y)
+    
+    def rotate(self, board, degrees):
+        newPolygon = affinity.rotate(self.polygon, degrees, origin='centroid')
+
+        # in all the situations where a cheat can appear the half way projection is colliding with the boundary
+        half_way_projection = affinity.rotate(self.polygon, degrees/2, origin='centroid')
+
+       
+
+        if not self.intersectionCollision(board, newPolygon) and not self.intersectionCollision(board, half_way_projection):
+            self.polygon = newPolygon
+            # if rotation goes through also rotate the forward point. no collision check needed for the forward point 
+            self.forward_point = affinity.rotate(self.forward_point, degrees, origin=self.polygon.centroid)
+        
         
 
     def normalize(self, coordinate):
         vector = np.array([coordinate.x, coordinate.y])
         norm_vector = vector / np.abs(np.linalg.norm(vector))
 
-        return Coordinate(norm_vector[0], norm_vector[1])
+        return Point(norm_vector[0], norm_vector[1])
 
-    # maybe if a collision occurs it should move against the wall, or I should just give the NEAT access to distance parameter 
-    def moveHorizontal(self, board, distance = 0.5):
-        # I should copy the list first and then only copy over the result if no colision. 
-        newCoordinateList = copy.deepcopy(self.coordinateList)
+    def set_forward_point(self):
+        # which direction is forward changes based on rotation of the object. So this should be a point that is forward of the center. 
+        # and moving forward = moving towards this point
+        self.forward_point = Point(self.polygon.centroid.x + 1, self.polygon.centroid.y)
 
-        for coordinate in newCoordinateList:
-            coordinate.x = coordinate.x + distance
+    def moveForward(self, board, distance = 0.5):
+        if(self.forward_point == None):
+            raise Exception("forward point should be set before moving forward")
+        self.moveTowardsPoint(board, self.forward_point, distance)
+
+    ### getter methods
+
+    def getForwardPoint(self) -> Point:
+        forward_point = copy.deepcopy(self.forward_point)
+        return forward_point
+
+    def getExteriorCoords(self) -> list:
+        polygon = copy.deepcopy(self.polygon)
+        return list(polygon.exterior.coords)
         
-        if not self.collisionCheck(board, newCoordinateList):
-            # possibly move the self list to against the barrier idk if thats smart
-            self.coordinateList = newCoordinateList
-        
-        # maybe if a collision occurs it should move against the wall, or I should just give the NEAT access to distance parameter 
-    
-    def moveVertical(self, board, distance = 0.5):
-        # I should copy the list first and then only copy over the result if no colision. 
-        newCoordinateList = copy.deepcopy(self.coordinateList)
-
-        for coordinate in newCoordinateList:
-            coordinate.y = coordinate.y + distance
-        
-        if not self.collisionCheck(board, newCoordinateList):
-            # possibly move the self list to against the barrier idk if thats smart
-            self.coordinateList = newCoordinateList
-    
-    def moveTowardsCoordinate(self, coordinate, distance = 0.5):
-        newCoordinateList = copy.deepcopy(self.coordinateList)
-        
-        centeredCoordinate = Coordinate(coordinate.x - 200, coordinate.y - 200)
-
-        norm_coordinate = self.normalize(centeredCoordinate)
-
-        coordinateToAdd = Coordinate(norm_coordinate.x * distance, norm_coordinate.y * distance)
-        print(norm_coordinate.x, coordinateToAdd.y)
-
-        # those two aditions should just be a function in the coordinate class but aight
-        for coordinate in newCoordinateList:
-            coordinate.y = coordinate.y + coordinateToAdd.y
-            coordinate.x = coordinate.x + coordinateToAdd.x
-        
-        if not self.traceCollisionCheck(newCoordinateList):
-            # possibly move the self list to against the barrier idk if thats smart
-            self.coordinateList = newCoordinateList 
-
-    # This function returns the intersection point of two line segments, or None if they do not intersect
-    # It uses the formula for the intersection of two lines in the form y = mx + b, where m is the slope and b is the y-intercept
-    def intersection(self, segment1, segment2):
-        a1, a2 = segment1
-        b1, b2 = segment2
-        da = a2 - a1
-        db = b2 - b1
-        dp = a1 - b1
-        dap = np.array([-da[1], da[0]])
-        denom = np.dot(dap, db)
-        if denom == 0:
-            return None
-        num = np.dot(dap, dp)
-        return (num / denom.astype(float)) * db + b1
