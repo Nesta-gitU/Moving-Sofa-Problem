@@ -28,6 +28,17 @@
                 board.setShape(shape)
                 board.show()
 
+
+    def get_boundary_difference(self, board, rectangle):
+        final_poly = copy.deepcopy(rectangle)
+
+        relevant_boundaries = board.boundaries[:3]
+
+
+        for poly in relevant_boundaries:
+            final_poly = final_poly.intersection(poly)
+
+        return final_poly
             
 
 
