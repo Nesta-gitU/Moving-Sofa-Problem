@@ -90,10 +90,10 @@ class Board:
     #print('shape points list:', shape.getExteriorCoords())
     #print(validation.explain_validity(shape.polygon))
 
-  def showPoly(self, poly):
+  def showPoly(self, poly, color = (200,30,40)):
     # show the polygon on the screen
     poly = [(x * self.SCALE, y * self.SCALE) for x, y in poly.exterior.coords]
-    pygame.draw.polygon(self.scrn, (200,30,40), poly, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, color, poly, self.polygon_thickness)
     pygame.display.update()
     
 
@@ -131,6 +131,6 @@ class Board:
     pygame.draw.polygon(self.scrn, (150, 0, 0), display_boundary4.exterior.coords, self.polygon_thickness)
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
 
-    pygame.draw.polygon(self.scrn, (100, 55, 28), display_field.exterior.coords, 20)
+    pygame.draw.polygon(self.scrn, (100, 55, 28), display_field.exterior.coords, 1)
 
  

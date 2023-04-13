@@ -15,10 +15,10 @@ pygame.init()
 #clock = pygame.time.Clock()
 
 MOVEEVENT = pygame.USEREVENT + 1 # this is just defining some event that we can use later (with integer key)
-pygame.time.set_timer(MOVEEVENT, 50)
+pygame.time.set_timer(MOVEEVENT, 40)
 
 # use the font arial
-load_from_file = True
+load_from_file = False
 # create a surface object, image is drawn on it.
 def run():
     if load_from_file == True:
@@ -35,7 +35,7 @@ def run():
         Polygon_object = Polygon(point_list)
 
     print(Polygon_object)
-    Polygon_object = shapely.set_precision(geometry = Polygon_object, grid_size = 0.001)
+    #Polygon_object = shapely.set_precision(geometry = Polygon_object, grid_size = 0.0001)
     print(Polygon_object)
     board = Board.Board()
     shape = Shape.Shape(Polygon_object)
@@ -60,7 +60,6 @@ def run():
                 
 
                 if event.type == pygame.KEYDOWN:
-                    print(event.type)
                     if event.key == pygame.K_UP:
                         shape.rotate(board, -3)
                     elif event.key == pygame.K_DOWN:
@@ -86,10 +85,10 @@ def run():
                     largest_rectangle = shape.getLargeRectangle()
                     #print('largest_rectangle: ', largest_rectangle.exterior.coords)
                     
-                    #for poly in shape.rectangle_list:
-                        #if poly.is_valid and isinstance(poly, Polygon):
+                    for poly in shape.rectangle_list:
+                        if poly.is_valid and isinstance(poly, Polygon):
                             #print(poly)
-                            #board.showPoly(poly)
+                            board.showPoly(poly)
                             # load the polygon dictionary from the file         
 
 
@@ -112,6 +111,8 @@ def run():
         
         #then I still do not understand why it doesnt come back to the correct spot but okay. 
         #Okay now I do. I am rotating arround the centroid of the shape. -> issue because then the minus rotation is incorrect. so I should rotate first and then itl work?
+
+        #making it a rectangle was dumb 
             
  
         # if event object type is QUIT
@@ -122,10 +123,10 @@ def run():
 
 
 def getPointList():
-    point1 = Point(0.00000, 0.25000)
-    point2 = Point(0.00000, 0.35000)
-    point3 = Point(0.05000, 0.35000)
-    point4 = Point(0.05000, 0.25000)
+    point1 = Point(0.00000, 0.45000)
+    point2 = Point(0.00000, 0.55000)
+    point3 = Point(0.05000, 0.55000)
+    point4 = Point(0.05000, 0.45000)
     
 
 
