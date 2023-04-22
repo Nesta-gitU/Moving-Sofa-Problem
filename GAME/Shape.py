@@ -22,7 +22,9 @@ class Shape:
         self.total_x_movement = 0
         self.total_y_movement = 0
         self.total_rotation = 0
-        self.current_rectangle = Polygon([(-4, 0), (-4, 1), (4-0.01, 1), (4-0.01, 0)])
+        self.current_rectangle = Polygon([(-4, 4), (-4, -4), (4-0.01, -4), (4-0.01, 4)])
+        #self.current_rectangle = Polygon([(-4, 1), (-4, 0), (4-0.01, 0), (4-0.01, 1)])
+
         #self.current_rectangle = shapely.set_precision(geometry = self.current_rectangle, grid_size = 0.0001)
         self.rectangle_list = []
         self.rectangle_list.append(copy.deepcopy(self.current_rectangle))
@@ -69,9 +71,41 @@ class Shape:
     def get_boundary_difference(self, board, rectangle):
         final_poly = copy.deepcopy(rectangle)
 
-        final_poly = final_poly.intersection(board.field)
+        final_poly = final_poly.intersection(board.field)  # #.difference(board.field.boundary)
 
         return final_poly
+
+    def shrink_or_swell_shapely_polygon(self, factor=0.10, swell=False):
+        ''' returns the shapely polygon which is smaller or bigger by passed factor.
+            If swell = True , then it returns bigger polygon, else smaller '''
+        
+
+        #my_polygon = mask2poly['geometry'][120]
+
+        xs = list(self.polygon.exterior.coords.xy[0])
+        ys = list(self.polygon.exterior.coords.xy[1])
+        x_center = 0.5 * min(xs) + 0.5 * max(xs)
+        y_center = 0.5 * min(ys) + 0.5 * max(ys)
+        min_corner = geometry.Point(min(xs), min(ys))
+        max_corner = geometry.Point(max(xs), max(ys))
+        center = geometry.Point(x_center, y_center)
+        shrink_distance = center.distance(min_corner)*factor
+
+        if swell:
+            self.polygon = self.polygon.buffer(shrink_distance) #expand
+        else:
+            self.polygon = self.polygon.buffer(-shrink_distance) #shrink
+
+        #visualize for debugging
+        #x, y = my_polygon.exterior.xy
+        #plt.plot(x,y)
+        #x, y = my_polygon_shrunken.exterior.xy
+        #plt.plot(x,y)
+        ## to net let the image be distorted along the axis
+        #plt.axis('equal')
+        #plt.show()    
+    
+        #return my_polygon_resized
 
 
 
@@ -149,7 +183,7 @@ class Shape:
         
         newPolygon = Polygon(newPoints)
 
-        if not self.collisionCheck(board, newPolygon):
+        if True: # not self.collisionCheck(board, newPolygon):
             self.polygon = newPolygon
             self.forward_point = affinity.translate(self.forward_point, xoff = pointToAdd.x, yoff = pointToAdd.y)
             
@@ -179,19 +213,21 @@ class Shape:
     
     def rotate(self, board, degrees):
         newPolygon = affinity.rotate(self.polygon, degrees, origin='centroid')
+        #newPolygon = affinity.translate(newPolygon, yoff = 0.001)
 
         # in all the situations where a cheat can appear the half way projection is colliding with the boundary
         half_way_projection = affinity.rotate(self.polygon, degrees/2, origin='centroid')
 
        
 
-        if not self.intersectionCollision(board, newPolygon) and not self.intersectionCollision(board, half_way_projection):
+        if True : #not self.intersectionCollision(board, newPolygon) and not self.intersectionCollision(board, half_way_projection):
             self.polygon = newPolygon
             # if rotation goes through also rotate the forward point. no collision check needed for the forward point and here also move back
-            self.forward_point = affinity.rotate(self.forward_point, degrees, origin=self.polygon.centroid)
+            self.forward_point = affinity.rotate(self.forward_point, degrees, origin=self.polygon.centroid) #THIS SHOULD NOT BE TURNED OF JUST A TEST definetly some possibilities but ignore them for now
+            
             
 
-            if(self.total_rotation < 90):
+            if(self.total_rotation < 90): #idk if this is still needed but it sort of works so fuck it I guess
                 ## for the rectangle projection 
                 self.total_rotation += degrees
                 #self.total_rotation = self.total_rotation % 360
@@ -228,39 +264,6 @@ class Shape:
         if(self.forward_point == None):
             raise Exception("forward point should be set before moving forward")
         self.moveTowardsPoint(board, self.forward_point, distance)
-
-    def shrink_or_swell_shapely_polygon(self, factor=0.10, swell=False):
-        ''' returns the shapely polygon which is smaller or bigger by passed factor.
-            If swell = True , then it returns bigger polygon, else smaller '''
-        
-
-        #my_polygon = mask2poly['geometry'][120]
-
-        shrink_factor = 0.10 #Shrink by 10%
-        xs = list(self.polygon.exterior.coords.xy[0])
-        ys = list(self.polygon.exterior.coords.xy[1])
-        x_center = 0.5 * min(xs) + 0.5 * max(xs)
-        y_center = 0.5 * min(ys) + 0.5 * max(ys)
-        min_corner = geometry.Point(min(xs), min(ys))
-        max_corner = geometry.Point(max(xs), max(ys))
-        center = geometry.Point(x_center, y_center)
-        shrink_distance = center.distance(min_corner)*0.10
-
-        if swell:
-            self.polygon = self.polygon.buffer(shrink_distance) #expand
-        else:
-            self.polygon = self.polygon.buffer(-shrink_distance) #shrink
-
-        #visualize for debugging
-        #x, y = my_polygon.exterior.xy
-        #plt.plot(x,y)
-        #x, y = my_polygon_shrunken.exterior.xy
-        #plt.plot(x,y)
-        ## to net let the image be distorted along the axis
-        #plt.axis('equal')
-        #plt.show()    
-    
-        #return my_polygon_resized
 
     ### getter methods
 

@@ -105,7 +105,7 @@ class Board:
     # -1's cause the booard is 4*100 but the last pixel is 399 (fuck past me haha)
 
     #the boundaries have different types but they should all have the .intersects method
-    boundary1 = Polygon([(0, 1), (3-0.01, 1), (3-0.01, 4-0.01), (0, 4-0.01)]) # botom left square
+    boundary1 = Polygon([(-4, 1), (3-0.01, 1), (3-0.01, 4-0.01), (-4, 4-0.01)]) # botom left square
     boundary2 = Polygon([(-4, 0), (4-0.01, 0), (4-0.01, -4-0.01), (-4, -4-0.01)]) # upper
     boundary3 = Polygon([(4-0.01, 0), (4-0.01, 4-0.01), (8-0.01, 4-0.01), (0, -4-0.01)]) # right most boundary
     
