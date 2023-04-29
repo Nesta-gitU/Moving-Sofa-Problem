@@ -21,7 +21,7 @@ pygame.init()
 #clock = pygame.time.Clock()
 
 MOVEEVENT = pygame.USEREVENT + 1 # this is just defining some event that we can use later (with integer key)
-pygame.time.set_timer(MOVEEVENT, 50)
+pygame.time.set_timer(MOVEEVENT, 10000)
 
 # use the font arial
 load_from_file = False
@@ -36,7 +36,8 @@ def run():
             print('simplified size =', Polygon_object.area)
 
     else:
-        point_list = getHammersly(board)
+        #point_list = getHammersly(board)
+        point_list = getPointList()
         print('point_list: ', point_list)
         Polygon_object = Polygon(point_list)
 
@@ -49,7 +50,6 @@ def run():
     #show the intial board
     board.setShape(shape)
     board.show()
-
     status = True
     stop = False
     while status:
@@ -134,14 +134,9 @@ def run():
 
 
 def getPointList():
-    point1 = Point(0.00000, 0.55000)
-    point2 = Point(0.00000, 0.65000)
-    point3 = Point(0.05000, 0.65000)
-    point4 = Point(0.05000, 0.55000)
+    point = Point(0.1000, 0.5000)
     
-
-
-    point_list = [point1, point2, point3, point4, point1]
+    point_list = point.buffer(0.1).exterior.coords
     return point_list
 
 def getHammersly(board):

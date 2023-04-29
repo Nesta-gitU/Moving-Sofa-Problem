@@ -33,7 +33,7 @@ class Board:
 
   def get_distance_value(self, shape) -> int:
     # return the absolute distance from the shape to the finish line. the finish line is boundary4
-    distance = shape.polygon.distance(self.boundaries[3])
+    distance = shape.polygon.distance(Point(3.5, 4))
     return distance
 
 
@@ -50,15 +50,25 @@ class Board:
     # draw the polygon on the screen
     pygame.draw.polygon(self.scrn, self.polygon_color, self.exterior_coords, self.polygon_thickness)
 
-    pygame.draw.polygon(self.scrn, self.polygon_color, self.exterior_coords_rectangle, self.polygon_thickness)
+    #pygame.draw.polygon(self.scrn, self.polygon_color, self.exterior_coords_rectangle, self.polygon_thickness)
 
     # draw the forward circle on the screen
-    pygame.draw.polygon(self.scrn, self.forward_circle_color, self.forward_circle_coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, self.forward_circle_color, self.forward_circle_coords, width=0)
+
+    # display the point we compute the distance towards function
+
+    distance_point = Point(3.5 *  self.SCALE, 4 * self.SCALE) 
+
+    # set the forward circle for the board
+    distance_point_coords = list(distance_point.buffer(10).exterior.coords)
+
+    print(distance_point_coords)
+    
+    pygame.draw.polygon(self.scrn, (0,0,0), distance_point_coords, width=0)
 
     # display the value function
     img = self.font.render('Distance = ' + str(self.distance_value), True, (0, 0, 255))
     self.scrn.blit(img, (10, 350))
-
 
  
     # paint screen one time
@@ -117,6 +127,8 @@ class Board:
     display_boundary3 = Polygon([(4*self.SCALE-1, 0), (4*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 0)])
     display_boundary4 = Polygon([(3*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 5*self.SCALE-1), (3*self.SCALE, 5*self.SCALE-1),])
     display_boundary5 = Polygon([(0, 0), (0, 1*self.SCALE), (-1*self.SCALE, 1*self.SCALE), (-1*self.SCALE, 0)])
+
+    display_finish_line = Polygon([((3-.01)*self.SCALE, 3.5*self.SCALE), ((4-0.01)*self.SCALE, 3.5*self.SCALE), ((4-0.01)*self.SCALE, 3.6*self.SCALE), ((3-0.01)*self.SCALE, 3.6*self.SCALE)])
     
  
     self.boundaries = [boundary1, boundary2, boundary3, boundary4]#, boundary5]
@@ -128,9 +140,11 @@ class Board:
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary1.exterior.coords, self.polygon_thickness)
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary2.exterior.coords, self.polygon_thickness)
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary3.exterior.coords, self.polygon_thickness)
-    pygame.draw.polygon(self.scrn, (150, 0, 0), display_boundary4.exterior.coords, self.polygon_thickness)
-    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
+    #pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary4.exterior.coords, self.polygon_thickness)
+    #pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
 
-    pygame.draw.polygon(self.scrn, (100, 55, 28), display_field.exterior.coords, 1)
+    #pygame.draw.polygon(self.scrn, (100, 55, 28), display_field.exterior.coords, 1)
+
+    pygame.draw.polygon(self.scrn, (0, 0, 0), display_finish_line.exterior.coords, 0)
 
  
