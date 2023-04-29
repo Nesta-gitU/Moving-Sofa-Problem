@@ -2,6 +2,7 @@ from shapely.geometry import Point, Polygon
 
 class Board:
   def __init__(self):
+    self.h = 0.5
     self.distance_point = Point(3.5, 4)
     self.finish_line = Polygon([((3-0.01), 3.5), ((4-0.01), 3.5), ((4-0.01), 3.6), ((3-0.01), 3.6)])
     self.setBounds()
