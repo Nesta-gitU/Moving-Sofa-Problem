@@ -1,6 +1,6 @@
-import numpy as np
 import pygame
 import Board
+import Display_board
 import Shape
 from shapely.geometry import Point, Polygon, box, LineString, MultiPolygon
 from shapely.geometry import shape as shapely_shape
@@ -21,7 +21,7 @@ pygame.init()
 #clock = pygame.time.Clock()
 
 MOVEEVENT = pygame.USEREVENT + 1 # this is just defining some event that we can use later (with integer key)
-pygame.time.set_timer(MOVEEVENT, 10000)
+pygame.time.set_timer(MOVEEVENT, 50)
 
 # use the font arial
 load_from_file = False
@@ -45,11 +45,12 @@ def run():
     #Polygon_object = shapely.set_precision(geometry = Polygon_object, grid_size = 0.0001)
     #print(Polygon_object)
     shape = Shape.Shape(Polygon_object)
+    display = Display_board.Display_board()
     #shape.shrink_or_swell_shapely_polygon(factor = 0.05)
 
     #show the intial board
-    board.setShape(shape)
-    board.show()
+    display.setShape(shape)
+    display.show()
     status = True
     stop = False
     while status:
@@ -60,26 +61,24 @@ def run():
                     shape.moveForward(board, 0.01)
                     
 
-                    board.setShape(shape)
-                    board.show()
+                    display.setShape(shape)
+                    display.show()
                 
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
                         # to make more projections 
-                        for i in range(30):
-                            shape.rotate(board, -0.1)
+                            shape.rotate(board, 90)
                     elif event.key == pygame.K_DOWN:
-                        for i in range(30):
-                            shape.rotate(board, 0.1)
+                            shape.rotate(board, 45)
                     elif event.key == pygame.K_RIGHT:
-                        shape.moveForward(board, 0.1)
+                        shape.rotate(board, 20)
                     elif event.key == pygame.K_LEFT:
-                        shape.moveForward(board, -0.1)
+                        shape.rotate(board, 0)
                     
                     
-                    board.setShape(shape)
-                    board.show()
+                    display.setShape(shape)
+                    display.show()
                 
                 if event.type == pygame.MOUSEBUTTONUP:
                     # if I ever use this again just tranlate the mous input keep everything in shape the 1.00 scale. 
@@ -87,10 +86,10 @@ def run():
 
                     shape.moveTowardsPoint(board, mousePoint, distance=0.1)
                 
-                    board.setShape(shape)
-                    board.show()
+                    display.setShape(shape)
+                    display.show()
                 
-                if (board.distance_value < 0.01 and stop == False):
+                if (board.is_finished(shape) and stop == False):
                     print('done')
                     largest_rectangle = shape.getLargeRectangle()
                     #print('largest_rectangle: ', largest_rectangle.exterior.coords)
@@ -98,7 +97,7 @@ def run():
                     for poly in shape.rectangle_list:
                         if poly.is_valid and isinstance(poly, Polygon):
                             #print(poly)
-                            board.showPoly(poly)
+                            display.showPoly(poly)
                             # load the polygon dictionary from the file         
 
 
@@ -106,7 +105,7 @@ def run():
                         print('multipolygon -> size 0')
                         
                     else:
-                        board.showPoly(largest_rectangle) # .geoms[0]
+                        display.showPoly(largest_rectangle) # .geoms[0]
 
                         print('size =', largest_rectangle.area)
 
