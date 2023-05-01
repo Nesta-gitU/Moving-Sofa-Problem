@@ -37,7 +37,7 @@ def main():
 
     h = Board.Board().h
 
-    for episode in actions_all_episodes.columns:
+    for episode in actions_all_episodes.columns[150:200]:
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
