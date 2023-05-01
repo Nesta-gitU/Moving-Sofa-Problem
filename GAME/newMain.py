@@ -21,7 +21,7 @@ pygame.init()
 #clock = pygame.time.Clock()
 
 MOVEEVENT = pygame.USEREVENT + 1 # this is just defining some event that we can use later (with integer key)
-pygame.time.set_timer(MOVEEVENT, 50)
+pygame.time.set_timer(MOVEEVENT, 40)
 
 # use the font arial
 load_from_file = False
@@ -90,6 +90,7 @@ def run():
                     display.show()
                 
                 if (board.is_finished(shape) and stop == False):
+                    print(board.get_distance_value(shape))
                     print('done')
                     largest_rectangle = shape.getLargeRectangle()
                     #print('largest_rectangle: ', largest_rectangle.exterior.coords)

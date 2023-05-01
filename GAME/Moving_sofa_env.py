@@ -1,5 +1,6 @@
 import Board
 import Shape
+from shapely import Polygon, Point
 import gymnasium as gym
 
 
@@ -7,8 +8,11 @@ class Moving_sofa_env(gym.Env):
     metadata = {"render_modes": []} #only allow not rendering (= None) for optimal cloud compatibility
 
     def __init__(self) -> None:
-        self.board = Board()
-        self.shape = Shape()
+        self.points_list = self.getPointList()
+        polygon = Polygon(self.points_list)
+        self.shape = Shape.Shape(polygon = polygon)
+        self.board = Board.Board()
+       
 
         self.render_mode = None
 
@@ -20,8 +24,8 @@ class Moving_sofa_env(gym.Env):
         super().reset(seed=seed)
 
         # Reset the board and shape
-        self.board = Board()
-        self.shape = Shape()
+        self.board = Board.Board()
+        self.shape = Shape.Shape(self.points_list)
 
         # reset should return the initial state and some information
         info = {}
@@ -48,4 +52,12 @@ class Moving_sofa_env(gym.Env):
         # get info
         info = {}
 
-        return state, reward, done, info
+        return state, reward, done, False, info
+    
+    def getPointList(self):
+        point = Point(0.1000, 0.5000)
+    
+        point_list = point.buffer(0.1).exterior.coords
+        return point_list
+    
+

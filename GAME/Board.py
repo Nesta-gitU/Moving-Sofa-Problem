@@ -8,12 +8,23 @@ class Board:
     self.setBounds()
 
   def get_distance_value(self, shape) -> int:
-    # return the absolute distance from the shape to the finish line. the finish line is boundary4
     distance = shape.polygon.distance(self.distance_point)
+
+    # Calculate the directional vector between the two points
+    direction = (self.distance_point.x - shape.polygon.centroid.x, self.distance_point.y - shape.polygon.centroid.y)
+
+    # Check the sign of the x component of the directional vector
+    if direction[1] < 0:
+      # If the x component is negative, make the distance negative
+      distance = -distance
+
+    # return the absolute distance from the shape to the finish line. the finish line is boundary4
+    
+    
     return distance
   
   def is_finished(self, shape):
-    if shape.polygon.distance(self.finish_line) < 0.01:
+    if self.get_distance_value(shape) < 0.01:
       return True
     return False
         
@@ -23,10 +34,10 @@ class Board:
     boundary1 = Polygon([(-4, 1), (3-0.01, 1), (3-0.01, 4-0.01), (-4, 4-0.01)]) # botom left square
     boundary2 = Polygon([(-4, 0), (4-0.01, 0), (4-0.01, -4-0.01), (-4, -4-0.01)]) # upper
     boundary3 = Polygon([(4-0.01, 0), (4-0.01, 4-0.01), (8-0.01, 4-0.01), (0, -4-0.01)]) # right most boundary
-    boundary4 = Polygon([(3, 4-0.01), (4, 4-0.01), (4, 5-0.01), (3, 5-0.01)]) # bottom small boundary
+    #boundary4 = Polygon([(3, 4-0.01), (4, 4-0.01), (4, 5-0.01), (3, 5-0.01)]) # bottom small boundary
     #boundary5 = Polygon([(0, 0), (0, 1), (-1, 1), (-1, 0)]) # left small boundary
 
-    self.boundaries = [boundary1, boundary2, boundary3, boundary4]#, boundary5]
+    self.boundaries = [boundary1, boundary2, boundary3]# ,boundary4, boundary5]
     #self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
 
  

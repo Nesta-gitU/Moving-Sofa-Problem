@@ -15,7 +15,7 @@ def display_solution(action_list, h, N):
     display = Display_board.Display_board()
     
     for i in range(N):
-        pygame.time.wait(1)
+        pygame.time.wait(10)
         action = action_list[i]
         
         shape.rotate(board, degrees = action)
@@ -35,10 +35,7 @@ def getPointList():
 def main():
     actions_all_episodes = pd.read_csv('actions.csv')
 
-    h = actions_all_episodes['h'][0]
-
-    actions_all_episodes = actions_all_episodes.drop('h', axis=1)
-    #actions_all_episodes = actions_all_episodes.drop('actions_taken4', axis=1)
+    h = Board.Board().h
 
     for episode in actions_all_episodes.columns:
         print(episode)
