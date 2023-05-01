@@ -55,6 +55,7 @@ def run():
     stop = False
     while status:
         for event in pygame.event.get():
+            print(shape.polygon.centroid)
             
             if stop == False:
                 if event.type == MOVEEVENT:

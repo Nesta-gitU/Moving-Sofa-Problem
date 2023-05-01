@@ -1,11 +1,17 @@
 from shapely.geometry import Point, Polygon
+import Shape
+import numpy as np 
+import math
 
 class Board:
   def __init__(self):
-    self.h = 0.5
+    
     self.distance_point = Point(3.5, 4)
     self.finish_line = Polygon([((3-0.01), 3.5), ((4-0.01), 3.5), ((4-0.01), 3.6), ((3-0.01), 3.6)])
     self.setBounds()
+
+    ### box stuff ###
+    self.init_boxes()
 
   def get_distance_value(self, shape) -> int:
     distance = shape.polygon.distance(self.distance_point)
@@ -40,4 +46,38 @@ class Board:
     self.boundaries = [boundary1, boundary2, boundary3]# ,boundary4, boundary5]
     #self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
 
- 
+  def init_boxes(self):
+    self.h = 0.5
+    wanted_width = int(1/self.h)
+    stack_one_two = int(3/self.h) + int(4/self.h) #section (1) + "rotated" section 2
+
+    self.total_boxes = wanted_width*stack_one_two
+
+    rows = int(4/self.h) 
+    columns = int(4/self.h)
+    self.boxes = np.reshape(np.arange(rows*columns), (int(4/self.h), int(4/self.h)))
+
+    start_number = self.boxes[wanted_width-1,columns-1] + 1
+
+    for i in range(wanted_width,rows):
+      for j in range(columns - wanted_width, columns):
+        self.boxes[i, j] = start_number
+        start_number += 1
+        
+
+
+
+  def get_box_index(self, shape: Shape):
+    # just give the whole grid. other function ensure we never leave the wanted area anyway 
+    x_min, x_max = 0, 4
+    y_min, y_max = 0, 4
+
+    i = math.ceil((shape.polygon.centroid.y - y_min) / self.h)
+    j = math.ceil((shape.polygon.centroid.x - x_min) / self.h)
+
+    return (i-1, j-1)
+  
+  def get_box(self, shape :Shape):
+    i, j = self.get_box_index(shape)
+    return self.boxes[i, j]
+

@@ -2,22 +2,23 @@ import Board
 import Shape
 from shapely import Polygon, Point
 import gymnasium as gym
+import numpy as np
 
 
 class Moving_sofa_env(gym.Env):
     metadata = {"render_modes": []} #only allow not rendering (= None) for optimal cloud compatibility
 
     def __init__(self) -> None:
-        self.points_list = self.getPointList()
-        polygon = Polygon(self.points_list)
-        self.shape = Shape.Shape(polygon = polygon)
+        points_list = self.getPointList()
+        self.polygon = Polygon(points_list)
+        self.shape = Shape.Shape(polygon = self.polygon)
         self.board = Board.Board()
        
 
         self.render_mode = None
 
-        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
-        self.state_space = [(1,2), (1,3), (2,5)] # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
+        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, -5, -10, -15, -20, -25, -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
+        self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
         
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
@@ -25,7 +26,7 @@ class Moving_sofa_env(gym.Env):
 
         # Reset the board and shape
         self.board = Board.Board()
-        self.shape = Shape.Shape(self.points_list)
+        self.shape = Shape.Shape(self.polygon)
 
         # reset should return the initial state and some information
         info = {}
@@ -43,14 +44,19 @@ class Moving_sofa_env(gym.Env):
         # get reward
         reward = self.board.get_distance_value(self.shape) - previous_distance
         
-        # get state
-        state = self.state_space[1] # @TODO: check in which state the new shape ends up return that state 
-
         # check if done
         done = self.board.is_finished(self.shape)
 
-        # get info
+         # get info
         info = {}
+        
+        if done == True:
+            return None, 10*reward, done, False, info
+
+        # get state
+        state = self.board.get_box(self.shape) # @TODO: check in which state the new shape ends up return that state 
+
+        #print("state: ", state)
 
         return state, reward, done, False, info
     

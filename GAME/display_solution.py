@@ -15,14 +15,14 @@ def display_solution(action_list, h, N):
     display = Display_board.Display_board()
     
     for i in range(N):
-        pygame.time.wait(10)
+        pygame.time.wait(1)
         action = action_list[i]
         
         shape.rotate(board, degrees = action)
         shape.moveForward(board, distance = h)
 
         display.setShape(shape)
-        display.show()
+        display.show() 
 
         
 def getPointList():
@@ -39,11 +39,9 @@ def main():
 
     for episode in actions_all_episodes.columns:
         print(episode)
-        print('wtf')
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
         N = len(actions)
         display_solution(actions, h, N)
-
 
 main()
