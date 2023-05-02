@@ -46,6 +46,10 @@ class Display_board:
     # draw the polygon on the screen
     pygame.draw.polygon(self.scrn, self.polygon_color, self.exterior_coords, self.polygon_thickness)
 
+    # draw the current rectangle on the screen
+    pygame.draw.polygon(self.scrn, (0,0,0), self.exterior_coords_rectangle, self.polygon_thickness)
+
+
     # draw the forward circle on the screen
     pygame.draw.polygon(self.scrn, self.forward_circle_color, self.forward_circle_coords, width=0)
 
@@ -58,6 +62,8 @@ class Display_board:
     img = self.font.render('Distance = ' + str(self.distance_value), True, (0, 0, 255))
     self.scrn.blit(img, (10, 350))
 
+
+
     #update screen 
     pygame.display.update()
   
@@ -65,7 +71,7 @@ class Display_board:
     # set the shape for the board
     self.exterior_coords = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords(which = 'polygon')]
 
-    #self.exterior_coords_rectangle = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords(which = 'rectangle')]
+    self.exterior_coords_rectangle = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords(which = 'boundary', horizontal_boundary = self.horizontal_field)]
 
     # get the forward point for the board
     forward_point = Point(shape.getForwardPoint().x * self.SCALE, shape.getForwardPoint().y * self.SCALE) 
@@ -116,6 +122,7 @@ class Display_board:
 
     self.boundaries = [boundary1, boundary2, boundary3]#, boundary4, boundary5]
     #self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
+    self.horizontal_field = Polygon([(-4, 0), (-4, 1), (4-0.01, 1), (4-0.01, 0)])
 
 
  

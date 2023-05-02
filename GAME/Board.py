@@ -45,6 +45,7 @@ class Board:
 
     self.boundaries = [boundary1, boundary2, boundary3]# ,boundary4, boundary5]
     self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
+    self.horizontal_field = Polygon([(-4, 0), (-4, 1), (4-0.01, 1), (4-0.01, 0)])
 
   def init_boxes(self):
     self.h = 0.25

@@ -3,7 +3,7 @@ import Shape
 from shapely import Polygon, Point
 import gymnasium as gym
 import numpy as np
-
+import copy 
 
 class Moving_sofa_env(gym.Env):
     metadata = {"render_modes": []} #only allow not rendering (= None) for optimal cloud compatibility
@@ -17,7 +17,7 @@ class Moving_sofa_env(gym.Env):
 
         self.render_mode = None
 
-        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
+        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
         self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
         
     def reset(self, seed=None, options=None):
@@ -35,7 +35,8 @@ class Moving_sofa_env(gym.Env):
         return state, info
     
     def step(self, action):
-        previous_distance = self.board.get_distance_value(self.shape)
+        #previous_distance = self.board.get_distance_value(self.shape)
+        previous_shape = copy.deepcopy(self.shape)
 
         # take action
         self.shape.rotate(self.board, degrees = action)
@@ -45,7 +46,8 @@ class Moving_sofa_env(gym.Env):
         done = self.board.is_finished(self.shape)
 
         # get reward
-        reward = self.get_reward(previous_distance, hit_wall, done)
+        #reward = self.get_reward(previous_distance, hit_wall, done)
+        reward = self.get_area_reward(previous_shape, hit_wall=hit_wall)
 
          # get info
         info = {}
@@ -66,7 +68,7 @@ class Moving_sofa_env(gym.Env):
         point_list = point.buffer(0.1).exterior.coords
         return point_list
     
-    def get_reward(self, previous_distance, hit_wall, done):
+    def get_distance_reward(self, previous_distance, hit_wall, done):
         ### note for myself ###
         # distance should decrease with each step, because we move towards a far away point
         # so pervious distance should be larger than current distance
@@ -84,3 +86,11 @@ class Moving_sofa_env(gym.Env):
 
         return reward
 
+    def get_area_reward(self, previous_shape, hit_wall):
+        overlap = self.shape.current_rectangle.intersection(previous_shape.current_rectangle)
+        reward = self.board.horizontal_field.intersection(self.shape.rectangle_list[-1]).area
+
+        if hit_wall == True:
+            reward -= 10
+        #print(area)
+        return reward

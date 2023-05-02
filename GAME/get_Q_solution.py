@@ -31,7 +31,7 @@ def get_solution(N, env, Qlearner):
         distances.append(env.board.get_distance_value(env.shape))
 
         if terminated or truncated:
-            return actions_taken, 0, states_seen
+            return actions_taken, 0, states_seen, distances, total_reward
 
         Qlearner.update_q_table(state, action_index, reward, next_state)
 
@@ -46,8 +46,8 @@ def get_solution(N, env, Qlearner):
 def main():
     #######parameters#######
     action_list = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #because of the weird grid no minusus. I guess just put minusus in the final paper. 
-    N = 100 #number of Decision Epochs
-    n_episodes = 5
+    N = 50 #number of Decision Epochs
+    n_episodes = 100
 
     env = Moving_sofa_env.Moving_sofa_env()
     Qlearner = Qlearning.Qlearning(n_states= len(env.state_space), n_actions=len(env.action_space))
@@ -74,7 +74,7 @@ def main():
     Q_table_to_csv(Q_table_per_episode, N)
     
     #export such that I can read It and check correctness
-    #pd.DataFrame(Q_table_per_episode[19]).to_csv("10thQtable.csv")
+    pd.DataFrame(Q_table_per_episode[9]).to_csv("10thQtable.csv")
 
 
     

@@ -4,18 +4,21 @@ import Display_board
 import pygame
 import pandas as pd
 from shapely.geometry import Point, Polygon
+import time
 
 pygame.init()
+
+display = Display_board.Display_board()
 
 def display_solution(action_list, h, N, states = None):
     point_list = getPointList()
     polygon = Polygon(point_list)
     shape = Shape.Shape(polygon = polygon)
     board = Board.Board()
-    display = Display_board.Display_board()
+    
     
     for i in range(N):
-        pygame.time.wait(1)
+        #time.sleep(1)
         action = action_list[i]
         #print(states[i])
         
@@ -23,7 +26,12 @@ def display_solution(action_list, h, N, states = None):
         shape.moveForward(board, distance = h)
 
         display.setShape(shape)
-        display.show() 
+        display.show()
+    print('hallo:', shape.getLargeRectangle().area)
+
+    return shape.getLargeRectangle()
+    
+    
 
         
 def getPointList():
@@ -39,7 +47,7 @@ def main():
 
     h = Board.Board().h
 
-    for episode in actions_all_episodes.columns:
+    for episode in actions_all_episodes.columns[10:100:10]:
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
@@ -48,6 +56,10 @@ def main():
         #states = list(states)
         #print(states)
         N = len(actions)
-        display_solution(actions, h, N)
+        largest = display_solution(actions, h, N)
+    display.showPoly(largest)
+    pygame.time.wait(10000)
+    
+        
 
 main()

@@ -1,9 +1,12 @@
 import numpy as np
+from math import radians, sin, cos
+import math
 import copy
 from shapely.geometry import Point, Polygon, LineString
 from shapely.ops import unary_union
 from shapely import affinity
 from shapely import validation
+import shapely
 from shapely import geometry
 
 # polygon object to represent the shape, this class has some wrappers and additional functionality
@@ -15,15 +18,18 @@ class Shape:
         self.set_forward_point()
         self.previous_rotation = 0
 
-        # rectangle stuff that is turned off in this branch
-        #self.total_x_movement = 0
-        #self.total_y_movement = 0
-        #self.total_rotation = 0
-        
-        #self.current_rectangle = Polygon([(-4, 4), (-4, -4), (4-0.01, -4), (4-0.01, 4)])
-        #self.rectangle_list = []
-        #self.rectangle_list.append(copy.deepcopy(self.current_rectangle))
+        # for the projection
+        self.total_x_movement = 0
+        self.total_y_movement = 0
+        self.current_rectangle = Polygon([(-4, 4), (-4, -4), (4-0.01, -4), (4-0.01, 4)])
+        #self.current_rectangle = Polygon([(-4, 1), (-4, 0), (4-0.01, 0), (4-0.01, 1)])
 
+        #self.current_rectangle = shapely.set_precision(geometry = self.current_rectangle, grid_size = 0.0001)
+        self.rectangle_list = []
+        self.rectangle_list.append(copy.deepcopy(self.current_rectangle)) # incorrect cause no boundary difference is taken
+
+
+    
     def collisionCheck(self, board, newPolygon):
         if(self.intersectionCollision(board, newPolygon)):
             return True
@@ -50,6 +56,13 @@ class Shape:
                     self.collision_bound = boundary
                     return True
         return False
+    
+    def get_boundary_difference(self, board, rectangle):
+        final_poly = copy.deepcopy(rectangle)
+
+        final_poly = final_poly.intersection(board.field)  # #.difference(board.field.boundary)
+
+        return final_poly
 
     def shrink_or_swell_shapely_polygon(self, factor=0.10, swell=False):
         ''' returns the shapely polygon which is smaller or bigger by passed factor.
@@ -72,9 +85,12 @@ class Shape:
         else:
             self.polygon = self.polygon.buffer(-shrink_distance) #shrink
 
+
+
     # maybe if a collision occurs it should move against the wall, or I should just give the NEAT access to distance parameter 
     def moveHorizontal(self, board, distance = 0.5):
         
+            
         newPolygon = affinity.translate(self.polygon, xoff = distance)
         
         if not self.collisionCheck(board, newPolygon):
@@ -147,26 +163,63 @@ class Shape:
         if not self.collisionCheck(board, newPolygon):
             self.polygon = newPolygon
             self.forward_point = affinity.translate(self.forward_point, xoff = pointToAdd.x, yoff = pointToAdd.y)
- 
-    def rotate(self, board, degrees):
-        newPolygon = affinity.rotate(self.polygon, -self.previous_rotation, origin='centroid')
-        newPolygon = affinity.rotate(newPolygon, degrees, origin='centroid')
-        
-        #newPolygon = affinity.translate(newPolygon, yoff = 0.001)
+            
 
-        # in all the situations where a cheat can appear the half way projection is colliding with the boundary
-        half_way_projection = affinity.rotate(self.polygon, degrees/2, origin='centroid')
 
-        if not self.intersectionCollision(board, newPolygon) and not self.intersectionCollision(board, half_way_projection):
-            self.polygon = newPolygon
-            # if rotation goes through also rotate the forward point. no collision check needed for the forward point and here also move back
-            self.forward_point = affinity.rotate(self.forward_point, degrees-self.previous_rotation, origin=self.polygon.centroid) 
-            self.previous_rotation = degrees
+            self.total_x_movement += pointToAdd.x
+            self.total_y_movement += pointToAdd.y
+            # set current rectangle to new translated rectangle and also unrotate it 
+            new_rectangle = affinity.translate(self.current_rectangle, xoff = pointToAdd.x, yoff = pointToAdd.y)
+            self.current_rectangle = new_rectangle
+            boundary_difference = self.get_boundary_difference(board, new_rectangle)
+                
+            #stop changing this it works perfectly
+            boundary_difference = affinity.rotate(boundary_difference, -self.previous_rotation, origin=self.polygon.centroid)
+            boundary_difference = affinity.translate(boundary_difference, xoff = -self.total_x_movement, yoff = -self.total_y_movement)
+            self.rectangle_list.append(boundary_difference)
+            #print(isinstance(boundary_difference, Polygon))
+            #print(shapely.distance(self.polygon, self.current_rectangle.boundary))
             hit_wall = False
         else:
             hit_wall = True
         return hit_wall
             
+
+
+    
+    def rotate(self, board, degrees):
+        newPolygon = affinity.rotate(self.polygon, -self.previous_rotation, origin='centroid')
+        newPolygon = affinity.rotate(newPolygon, degrees, origin='centroid')
+
+        #newPolygon = affinity.translate(newPolygon, yoff = 0.001)
+
+        # in all the situations where a cheat can appear the half way projection is colliding with the boundary
+        half_way_projection = affinity.rotate(self.polygon, degrees/2, origin='centroid')
+
+       
+
+        if not self.intersectionCollision(board, newPolygon) and not self.intersectionCollision(board, half_way_projection):
+            self.polygon = newPolygon
+            # if rotation goes through also rotate the forward point. no collision check needed for the forward point and here also move back
+            self.forward_point = affinity.rotate(self.forward_point, degrees - self.previous_rotation, origin=self.polygon.centroid) #THIS SHOULD NOT BE TURNED OF JUST A TEST definetly some possibilities but ignore them for now
+
+            # set currect rectangle to new rotated rectangle
+            new_rectangle = affinity.rotate(self.current_rectangle, degrees - self.previous_rotation, origin=self.polygon.centroid) # copilot making assumptions i didnt even think about yet
+            self.current_rectangle = new_rectangle
+
+            # add difference of new rectangle that is straightend (horizontal) and moved back to the rectangle list
+            boundary_difference = self.get_boundary_difference(board, new_rectangle)
+            boundary_difference = affinity.rotate(boundary_difference, -degrees, origin=self.polygon.centroid)
+            #board.showPoly(boundary_difference)
+            boundary_difference = affinity.translate(boundary_difference, xoff = -self.total_x_movement, yoff = -self.total_y_movement)
+            self.rectangle_list.append(boundary_difference)
+
+            self.previous_rotation = degrees
+            
+
+        
+        
+
     def normalize(self, coordinate):
         vector = np.array([coordinate.x, coordinate.y])
         norm_vector = vector / np.abs(np.linalg.norm(vector))
@@ -175,13 +228,14 @@ class Shape:
 
     def set_forward_point(self):
         # which direction is forward changes based on rotation of the object. So this should be a point that is forward of the center. 
-        # and moving forward == moving towards this point
+        # and moving forward = moving towards this point
         self.forward_point = Point(self.polygon.centroid.x + 1, self.polygon.centroid.y)
 
     def moveForward(self, board, distance = 0.5):
         if(self.forward_point == None):
             raise Exception("forward point should be set before moving forward")
         hit_wall = self.moveTowardsPoint(board, self.forward_point, distance)
+
         return hit_wall
 
     ### getter methods
@@ -190,9 +244,29 @@ class Shape:
         forward_point = copy.deepcopy(self.forward_point)
         return forward_point
 
-    def getExteriorCoords(self, which = 'polygon') -> list:
+    def getExteriorCoords(self, horizontal_boundary = None, which = 'polygon') -> list:
         if which == 'polygon':
             polygon = copy.deepcopy(self.polygon)
 
+        if which == 'rectangle':
+            polygon = copy.deepcopy(self.current_rectangle)
+
+        if which == 'boundary':
+            polygon2 = copy.deepcopy(horizontal_boundary.intersection(self.rectangle_list[-1]))
+            polygon = copy.deepcopy(self.rectangle_list[-1])
+            if not polygon.is_valid and not isinstance(polygon, Polygon):
+                polygon = copy.deepcopy(self.polygon)
+            #print(polygon2.area)
         return list(polygon.exterior.coords)
     
+    def getLargeRectangle(self):
+        
+        final_poly = self.rectangle_list[0]
+
+        for poly in self.rectangle_list[1:]:
+            if poly.is_valid and isinstance(poly, Polygon):
+                final_poly = final_poly.intersection(poly)
+                #print(final_poly) these are all empty so lets print first 
+            
+
+        return final_poly
