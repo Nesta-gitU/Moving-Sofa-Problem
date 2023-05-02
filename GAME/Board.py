@@ -44,10 +44,10 @@ class Board:
     #boundary5 = Polygon([(0, 0), (0, 1), (-1, 1), (-1, 0)]) # left small boundary
 
     self.boundaries = [boundary1, boundary2, boundary3]# ,boundary4, boundary5]
-    #self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
+    self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
 
   def init_boxes(self):
-    self.h = 0.5
+    self.h = 1
     wanted_width = int(1/self.h)
     stack_one_two = int(3/self.h) + int(4/self.h) #section (1) + "rotated" section 2
 

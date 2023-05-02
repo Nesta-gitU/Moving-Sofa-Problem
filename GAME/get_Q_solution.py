@@ -9,6 +9,7 @@ import numpy as np
 def get_solution(N, env, Qlearner):
     
     state, info = env.reset()
+    #print('state:' + str(state)) it starts at (h = 1, state = 0)
 
     actions_taken = []
     
@@ -36,8 +37,8 @@ def get_solution(N, env, Qlearner):
 def main():
     #######parameters#######
     action_list = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #because of the weird grid no minusus. I guess just put minusus in the final paper. 
-    N = 200 #number of Decision Epochs
-    n_episodes = 10
+    N = 100 #number of Decision Epochs
+    n_episodes = 100
 
     env = Moving_sofa_env.Moving_sofa_env()
     Qlearner = Qlearning.Qlearning(n_states= len(env.state_space), n_actions=len(env.action_space))
@@ -51,9 +52,14 @@ def main():
         Q_table_per_episode.append(Qlearner.q_table)
         Qlearner.update_epsilon()
 
-    print(Q_table_per_episode)
+    #print(Q_table_per_episode)
 
     Q_table_to_csv(Q_table_per_episode, N)
+    
+    #export such that I can read It and check correctness
+    #pd.DataFrame(Q_table_per_episode[10]).to_csv("10thQtable.csv")
+
+
     
     # create a dictionary where the keys are the column names and the values are the inner lists
     data_dict = {f"actions_taken{i+1}": inner_list for i, inner_list in enumerate(actions_all_episodes)}
@@ -72,10 +78,13 @@ def  Q_table_to_csv(Q_table_per_episode, N):
         state, info = env.reset()
         action_list = []
         for i in range(N):
+            #print(Q_table[state])
             index = np.argmax(Q_table[state])
             action = env.action_space[index]
 
             next_state, reward, terminated, truncated, info = env.step(action)
+            if terminated or truncated:
+                continue
             action_list.append(action)
             
             state = next_state

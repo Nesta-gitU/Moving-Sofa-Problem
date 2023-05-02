@@ -162,6 +162,10 @@ class Shape:
             # if rotation goes through also rotate the forward point. no collision check needed for the forward point and here also move back
             self.forward_point = affinity.rotate(self.forward_point, degrees-self.previous_rotation, origin=self.polygon.centroid) 
             self.previous_rotation = degrees
+            hit_wall = False
+        else:
+            hit_wall = True
+        return hit_wall
             
     def normalize(self, coordinate):
         vector = np.array([coordinate.x, coordinate.y])
@@ -177,7 +181,8 @@ class Shape:
     def moveForward(self, board, distance = 0.5):
         if(self.forward_point == None):
             raise Exception("forward point should be set before moving forward")
-        self.moveTowardsPoint(board, self.forward_point, distance)
+        hit_wall = self.moveTowardsPoint(board, self.forward_point, distance)
+        return hit_wall
 
     ### getter methods
 

@@ -33,11 +33,11 @@ def getPointList():
 
 
 def main():
-    actions_all_episodes = pd.read_csv('actions.csv')
+    actions_all_episodes = pd.read_csv('Q_actions.csv')
 
     h = Board.Board().h
 
-    for episode in actions_all_episodes.columns[150:200]:
+    for episode in actions_all_episodes.columns:
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)

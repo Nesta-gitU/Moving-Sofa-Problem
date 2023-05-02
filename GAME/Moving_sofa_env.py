@@ -17,7 +17,7 @@ class Moving_sofa_env(gym.Env):
 
         self.render_mode = None
 
-        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #-5, -10, -15, -20, -25, -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
+        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
         self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
         
     def reset(self, seed=None, options=None):
@@ -30,7 +30,7 @@ class Moving_sofa_env(gym.Env):
 
         # reset should return the initial state and some information
         info = {}
-        state = self.state_space[0]
+        state = self.board.get_box(self.shape)
 
         return state, info
     
@@ -39,19 +39,19 @@ class Moving_sofa_env(gym.Env):
 
         # take action
         self.shape.rotate(self.board, degrees = action)
-        self.shape.moveForward(self.board, distance = self.board.h)
-
-        # get reward
-        reward = self.board.get_distance_value(self.shape) - previous_distance
+        hit_wall = self.shape.moveForward(self.board, distance = self.board.h)
         
         # check if done
         done = self.board.is_finished(self.shape)
+
+        # get reward
+        reward = self.get_reward(previous_distance, hit_wall, done)
 
          # get info
         info = {}
         
         if done == True:
-            return None, 10*reward, done, False, info
+            return None, reward, done, False, info
 
         # get state
         state = self.board.get_box(self.shape) # @TODO: check in which state the new shape ends up return that state 
@@ -66,4 +66,12 @@ class Moving_sofa_env(gym.Env):
         point_list = point.buffer(0.1).exterior.coords
         return point_list
     
+    def get_reward(self, previous_distance, hit_wall, done):
+        reward = self.board.get_distance_value(self.shape) - previous_distance
+        if hit_wall == True:
+            reward -= 10
+        if done == True:
+            reward += 100
+
+        return reward
 
