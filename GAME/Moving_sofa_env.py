@@ -67,10 +67,18 @@ class Moving_sofa_env(gym.Env):
         return point_list
     
     def get_reward(self, previous_distance, hit_wall, done):
-        reward = self.board.get_distance_value(self.shape) - previous_distance
-        reward = reward * -100
-        #if hit_wall == True:
-        #    reward += 10
+        ### note for myself ###
+        # distance should decrease with each step, because we move towards a far away point
+        # so pervious distance should be larger than current distance
+        # which means we define the reward as the ammount we got closer to that point, which is:
+        # reward = previous_distance - current_distance
+        #######################
+        reward = previous_distance - self.board.get_distance_value(self.shape) 
+        #print("previous_distance: ", previous_distance)
+        #print("current_distance: ", self.board.get_distance_value(self.shape))
+        reward = reward * 100
+        if hit_wall == True:
+            reward -= 10
         #if done == True:
         #    reward -= 100
 

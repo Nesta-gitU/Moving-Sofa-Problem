@@ -4,6 +4,8 @@ from shapely.geometry import Point, Polygon
 import random
 import pandas as pd
 import numpy as np
+import copy
+import matplotlib.pyplot as plt
 
 np.random.seed(0)
 
@@ -14,15 +16,19 @@ def get_solution(N, env, Qlearner):
 
     actions_taken = []
     states_seen = []
+    distances = [env.board.get_distance_value(env.shape)]
+    total_reward = 0
     
     for i in range(N):
         action_index = Qlearner.get_action(state)
         action = env.action_space[action_index]
 
         next_state, reward, terminated, truncated, info = env.step(action)
+        total_reward += reward
 
         actions_taken.append(action)
         states_seen.append(state)
+        distances.append(env.board.get_distance_value(env.shape))
 
         if terminated or truncated:
             return actions_taken, 0, states_seen
@@ -33,15 +39,15 @@ def get_solution(N, env, Qlearner):
 
         
     
-    loss = 0
-    return actions_taken, loss, states_seen
+    loss = env.board.get_distance_value(env.shape)
+    return actions_taken, loss, states_seen, distances, total_reward
 
 
 def main():
     #######parameters#######
     action_list = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #because of the weird grid no minusus. I guess just put minusus in the final paper. 
-    N = 1000 #number of Decision Epochs
-    n_episodes = 20
+    N = 100 #number of Decision Epochs
+    n_episodes = 5
 
     env = Moving_sofa_env.Moving_sofa_env()
     Qlearner = Qlearning.Qlearning(n_states= len(env.state_space), n_actions=len(env.action_space))
@@ -49,12 +55,18 @@ def main():
     actions_all_episodes = []
     states_all_episodes = []
     Q_table_per_episode = []
+    distances_per_episode = []
+    total_reward_per_episode = []
+    loss_per_episode = []
 
     for i in range(n_episodes):
-        actions_taken, loss, states_seen = get_solution(N, env, Qlearner)
+        actions_taken, loss, states_seen, distances, total_reward = get_solution(N, env, Qlearner)
         actions_all_episodes.append(actions_taken)
         states_all_episodes.append(states_seen)
-        Q_table_per_episode.append(Qlearner.q_table)
+        distances_per_episode.append(distances)
+        total_reward_per_episode.append(total_reward)
+        loss_per_episode.append(loss)
+        Q_table_per_episode.append(copy.deepcopy(Qlearner.q_table))
         Qlearner.update_epsilon()
 
     #print(Q_table_per_episode)
@@ -62,7 +74,7 @@ def main():
     Q_table_to_csv(Q_table_per_episode, N)
     
     #export such that I can read It and check correctness
-    pd.DataFrame(Q_table_per_episode[19]).to_csv("10thQtable.csv")
+    #pd.DataFrame(Q_table_per_episode[19]).to_csv("10thQtable.csv")
 
 
     
@@ -81,6 +93,18 @@ def main():
     df2 = pd.DataFrame.from_dict(data_dict2, orient='index').transpose()
 
     df2.to_csv('states_seen.csv', index=False)
+
+
+    make_figures(n_episodes, distances_per_episode, loss_per_episode, total_reward_per_episode)
+
+
+def make_figures(n_episodes, distances_per_episode, loss_per_episode, total_reward_per_episode):
+    plt.plot(range(n_episodes), total_reward_per_episode)
+    plt.show()
+    plt.plot(range(n_episodes), loss_per_episode)
+    plt.show()
+
+
 
 def  Q_table_to_csv(Q_table_per_episode, N):
     env = Moving_sofa_env.Moving_sofa_env()

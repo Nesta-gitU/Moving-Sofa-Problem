@@ -15,9 +15,9 @@ def display_solution(action_list, h, N, states = None):
     display = Display_board.Display_board()
     
     for i in range(N):
-        pygame.time.wait(50)
+        pygame.time.wait(1)
         action = action_list[i]
-        print(states[i])
+        #print(states[i])
         
         shape.rotate(board, degrees = action)
         shape.moveForward(board, distance = h)
@@ -34,7 +34,7 @@ def getPointList():
 
 
 def main():
-    actions_all_episodes = pd.read_csv('actions.csv')
+    actions_all_episodes = pd.read_csv('Q_actions.csv')
     states_seen = pd.read_csv('states_seen.csv')
 
     h = Board.Board().h
@@ -44,10 +44,10 @@ def main():
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
         
-        states = states_seen[episode].dropna()
-        states = list(states)
-        print(states)
+        #states = states_seen[episode].dropna()
+        #states = list(states)
+        #print(states)
         N = len(actions)
-        display_solution(actions, h, N, states)
+        display_solution(actions, h, N)
 
 main()
