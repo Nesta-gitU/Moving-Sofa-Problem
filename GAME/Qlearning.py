@@ -1,7 +1,7 @@
 import numpy as np
 
 class Qlearning():
-    def __init__(self, n_states, n_actions, gamma = 0.9, epsilon = 0.9, epsilon_decay = 0.95, epsilon_min = 0.1):
+    def __init__(self, n_states, n_actions, alpha = 0.5, gamma = 0.9, epsilon = 0.9, epsilon_decay = 0.9, epsilon_min = 0.1):
         # number of actions
         self.n_actions = n_actions
 
@@ -13,6 +13,7 @@ class Qlearning():
 
         # discount factor
         self.gamma = gamma
+        self.alpha = alpha
 
         # 90% exploration, 10% exploitation
         self.epsilon = 0.9
@@ -37,12 +38,12 @@ class Qlearning():
         return np.argmax(self.q_table[state]) # returns the number of the action with the highest Q-value, so actions need to be identified by numbers for this to work
 
 
-    # Q-Learning - update the Q Table using Q(s, a)
+    # Q-Learning - update the Q Table using Q(s, a), but this is a full update for alpha is 1 (alpha is the learning rate) now alpha is added
     def update_q_table(self, state, action, reward, next_state):
         # Q(s, a) = reward + gamma * max_a' Q(s', a')
-        q_value = self.gamma * np.amax(self.q_table[next_state])
-        q_value += reward
-        self.q_table[state, action] = q_value
+        new_q_value = self.gamma * np.amax(self.q_table[next_state])
+        new_q_value += reward
+        self.q_table[state, action] = (1 - self.alpha) * self.q_table[state, action] + self.alpha * new_q_value
 
 
     # UI to dump Q Table contents

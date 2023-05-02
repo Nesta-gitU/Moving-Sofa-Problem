@@ -7,7 +7,7 @@ from shapely.geometry import Point, Polygon
 
 pygame.init()
 
-def display_solution(action_list, h, N):
+def display_solution(action_list, h, N, states = None):
     point_list = getPointList()
     polygon = Polygon(point_list)
     shape = Shape.Shape(polygon = polygon)
@@ -15,8 +15,9 @@ def display_solution(action_list, h, N):
     display = Display_board.Display_board()
     
     for i in range(N):
-        pygame.time.wait(1)
+        pygame.time.wait(50)
         action = action_list[i]
+        print(states[i])
         
         shape.rotate(board, degrees = action)
         shape.moveForward(board, distance = h)
@@ -33,7 +34,8 @@ def getPointList():
 
 
 def main():
-    actions_all_episodes = pd.read_csv('Q_actions.csv')
+    actions_all_episodes = pd.read_csv('actions.csv')
+    states_seen = pd.read_csv('states_seen.csv')
 
     h = Board.Board().h
 
@@ -41,7 +43,11 @@ def main():
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
+        
+        states = states_seen[episode].dropna()
+        states = list(states)
+        print(states)
         N = len(actions)
-        display_solution(actions, h, N)
+        display_solution(actions, h, N, states)
 
 main()

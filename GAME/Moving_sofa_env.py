@@ -68,10 +68,11 @@ class Moving_sofa_env(gym.Env):
     
     def get_reward(self, previous_distance, hit_wall, done):
         reward = self.board.get_distance_value(self.shape) - previous_distance
-        if hit_wall == True:
-            reward -= 10
-        if done == True:
-            reward += 100
+        reward = reward * -100
+        #if hit_wall == True:
+        #    reward += 10
+        #if done == True:
+        #    reward -= 100
 
         return reward
 
