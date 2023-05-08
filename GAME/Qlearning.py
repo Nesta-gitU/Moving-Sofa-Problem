@@ -1,7 +1,7 @@
 import numpy as np
 
 class Qlearning():
-    def __init__(self, n_states, n_actions, alpha = 0.65, gamma = 0.9, epsilon = 0.995, epsilon_decay = 0.9, epsilon_min = 0.1):
+    def __init__(self, n_states, n_actions, alpha = 0.75, gamma = 0.9, epsilon = 0.9, epsilon_decay = 0.95, epsilon_min = 0.5):
         # number of actions
         self.n_actions = n_actions
 
@@ -16,11 +16,11 @@ class Qlearning():
         self.alpha = alpha
 
         # 90% exploration, 10% exploitation
-        self.epsilon = 0.9
+        self.epsilon = epsilon
         # exploration decays by this factor every episode
-        self.epsilon_decay = 0.9
+        self.epsilon_decay = epsilon_decay
         # in the long run, 10% exploration, 90% exploitation
-        self.epsilon_min = 0.1
+        self.epsilon_min = epsilon_min
 
         self.is_explore = True
     

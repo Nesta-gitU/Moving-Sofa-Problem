@@ -47,7 +47,7 @@ def main():
 
     h = Board.Board().h
 
-    for episode in actions_all_episodes.columns[10:100:10]:
+    for episode in actions_all_episodes.columns:
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
@@ -58,7 +58,7 @@ def main():
         N = len(actions)
         largest = display_solution(actions, h, N)
     display.showPoly(largest)
-    pygame.time.wait(10000)
+    pygame.time.wait(1000)
     
         
 

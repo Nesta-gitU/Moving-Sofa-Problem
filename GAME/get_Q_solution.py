@@ -46,7 +46,7 @@ def get_solution(N, env, Qlearner):
 def main():
     #######parameters#######
     action_list = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #because of the weird grid no minusus. I guess just put minusus in the final paper. 
-    N = 50 #number of Decision Epochs
+    N = 100 #number of Decision Epochs
     n_episodes = 100
 
     env = Moving_sofa_env.Moving_sofa_env()
