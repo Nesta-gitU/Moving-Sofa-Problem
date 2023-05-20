@@ -13,7 +13,7 @@ display = Display_board.Display_board()
 def display_solution(action_list, h, N, states = None):
     point_list = getPointList()
     polygon = Polygon(point_list)
-    shape = Shape.Shape(polygon = polygon)
+    shape = Shape.Shape(polygon = polygon, delay_rectangles= True)
     board = Board.Board()
     
     
@@ -42,12 +42,12 @@ def getPointList():
 
 
 def main():
-    actions_all_episodes = pd.read_csv('Q_actions.csv')
+    actions_all_episodes = pd.read_csv('Q_actions-new.csv')
     states_seen = pd.read_csv('states_seen.csv')
 
     h = Board.Board().h
 
-    for episode in actions_all_episodes.columns:
+    for episode in actions_all_episodes.columns[10:500:10]:
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)

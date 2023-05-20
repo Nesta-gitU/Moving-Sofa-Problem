@@ -35,6 +35,18 @@ class Display_board:
 
   def get_distance_value(self, shape) -> int:
     distance = shape.polygon.distance(self.distance_point)
+
+    # Calculate the directional vector between the two points
+    direction = (self.distance_point.x - shape.polygon.centroid.x, self.distance_point.y - shape.polygon.centroid.y)
+
+    # Check the sign of the x component of the directional vector
+    if direction[1] < 0:
+      # If the x component is negative, make the distance negative
+      distance = -distance
+
+    # return the absolute distance from the shape to the finish line. the finish line is boundary4
+    
+    
     return distance
 
 

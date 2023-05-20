@@ -47,7 +47,7 @@ def main():
     #######parameters#######
     action_list = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #because of the weird grid no minusus. I guess just put minusus in the final paper. 
     N = 100 #number of Decision Epochs
-    n_episodes = 100
+    n_episodes = 500
 
     env = Moving_sofa_env.Moving_sofa_env()
     Qlearner = Qlearning.Qlearning(n_states= len(env.state_space), n_actions=len(env.action_space))
@@ -84,7 +84,7 @@ def main():
     # create a dataframe from the dictionary
     df = pd.DataFrame.from_dict(data_dict, orient='index').transpose()
 
-    df.to_csv('actions.csv', index=False)
+    df.to_csv('actions-new.csv', index=False)
 
      # create a dictionary where the keys are the column names and the values are the inner lists
     data_dict2 = {f"actions_taken{i+1}": inner_list for i, inner_list in enumerate(states_all_episodes)}
@@ -135,6 +135,6 @@ def  Q_table_to_csv(Q_table_per_episode, N):
     # create a dataframe from the dictionary
     df = pd.DataFrame.from_dict(data_dict, orient='index').transpose()
 
-    df.to_csv('Q_actions.csv', index=False)
+    df.to_csv('Q_actions-new.csv', index=False)
 
 main()

@@ -1,7 +1,7 @@
 import numpy as np
 
 class Qlearning():
-    def __init__(self, n_states, n_actions, alpha = 0.75, gamma = 0.9, epsilon = 0.9, epsilon_decay = 0.95, epsilon_min = 0.5):
+    def __init__(self, n_states, n_actions, alpha = 0.75, gamma = 0.9, epsilon = 0.9, epsilon_decay = 0.997, epsilon_min = 0.3):
         # number of actions
         self.n_actions = n_actions
 

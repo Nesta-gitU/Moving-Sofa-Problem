@@ -20,7 +20,10 @@ class Moving_sofa_env(gym.Env):
         self.render_mode = None
 
         self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
-        #self.action_space = [-90, -80, -70, -60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90] #, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90] 
+        #self.action_space1 = [-80, -70, -60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80] #, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
+        #self.action_space2 = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160 ,170]
+
+        #self.action_space = copy.deepcopy(self.action_space1)
         # The action space above is a fun example of reward function goes wrong, it has no incentive to actually finish so just goes -90, 90 to optimize reward. 
         # I guess one solution would be two Q-table for section (1) and section (2) of the corridor or we could actually just have two action spaces and that would do the same. Or a time step based negative reward, but that would counter the size optimizater. 
         self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
@@ -28,6 +31,9 @@ class Moving_sofa_env(gym.Env):
     def reset(self, seed=None, options=None):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
+
+        #reset the action space
+        #self.action_space = copy.deepcopy(self.action_space1)
 
         #choose a random start point 
         new_x = 0.1
@@ -66,6 +72,9 @@ class Moving_sofa_env(gym.Env):
         
         if done == True:
             return None, reward, done, False, info
+        #if self.shape.polygon.centroid.x > 3:
+        #    #print('hello')
+        #    self.action_space = copy.deepcopy(self.action_space2)
 
         # get state
         state = self.board.get_box(self.shape) # @TODO: check in which state the new shape ends up return that state 
