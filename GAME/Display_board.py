@@ -85,9 +85,9 @@ class Display_board:
   def displayBounds(self):
     # -1's cause the booard is 4*100 but the last pixel is 399 (fuck past me haha)
 
-    display_boundary1 = Polygon([(0, 1*self.SCALE), (3*self.SCALE-1, 1*self.SCALE), (3*self.SCALE-1, 4*self.SCALE-1), (0, 4*self.SCALE-1)]) 
+    display_boundary1 = Polygon([(0, 1*self.SCALE), (3*self.SCALE-1, 1*self.SCALE), (3*self.SCALE-1, 6*self.SCALE-1), (0, 6*self.SCALE-1)]) 
     display_boundary2 = Polygon([(0, 0), (4*self.SCALE-1, 0), (4*self.SCALE-1, -4*self.SCALE-1), (0, -4*self.SCALE-1)])
-    display_boundary3 = Polygon([(4*self.SCALE-1, 0), (4*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 0)])
+    display_boundary3 = Polygon([(4*self.SCALE-1, 0), (4*self.SCALE-1, 6*self.SCALE-1), (8*self.SCALE-1, 6*self.SCALE-1), (8*self.SCALE-1, 0)])
     display_boundary4 = Polygon([(3*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 5*self.SCALE-1), (3*self.SCALE, 5*self.SCALE-1),])
     display_boundary5 = Polygon([(0, 0), (0, 1*self.SCALE), (-1*self.SCALE, 1*self.SCALE), (-1*self.SCALE, 0)])
 
@@ -95,7 +95,7 @@ class Display_board:
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary2.exterior.coords, self.polygon_thickness)
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary3.exterior.coords, self.polygon_thickness)
     #pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary4.exterior.coords, self.polygon_thickness)
-    #pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
 
     display_finish_line = Polygon([((3-.01)*self.SCALE, 3.5*self.SCALE), ((4-0.01)*self.SCALE, 3.5*self.SCALE), ((4-0.01)*self.SCALE, 3.6*self.SCALE), ((3-0.01)*self.SCALE, 3.6*self.SCALE)])
     pygame.draw.polygon(self.scrn, (0, 0, 0), display_finish_line.exterior.coords, 0)

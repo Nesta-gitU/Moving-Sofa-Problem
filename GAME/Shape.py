@@ -147,6 +147,10 @@ class Shape:
         if not self.collisionCheck(board, newPolygon):
             self.polygon = newPolygon
             self.forward_point = affinity.translate(self.forward_point, xoff = pointToAdd.x, yoff = pointToAdd.y)
+            hit_wall = False
+        else:
+            hit_wall = True
+        return hit_wall
  
     def rotate(self, board, degrees):
         newPolygon = affinity.rotate(self.polygon, -self.previous_rotation, origin='centroid')
@@ -183,6 +187,21 @@ class Shape:
             raise Exception("forward point should be set before moving forward")
         hit_wall = self.moveTowardsPoint(board, self.forward_point, distance)
         return hit_wall
+
+    def move_to_box_center(self, board):
+        # get the center of the box
+        box_center = board.get_box_center(self)
+        # get x and y ofsets
+        dx = box_center.x - self.polygon.centroid.x
+        dy = box_center.y - self.polygon.centroid.y
+
+        # Move the shape to the new point
+        self.polygon = affinity.translate(self.polygon, xoff = dx, yoff =  dy)
+
+        # Move the forward point to the new point
+        self.forward_point = affinity.translate(self.forward_point, xoff = dx, yoff =  dy)
+
+
 
     ### getter methods
 

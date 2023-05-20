@@ -17,7 +17,7 @@ class Moving_sofa_env(gym.Env):
 
         self.render_mode = None
 
-        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
+        self.action_space = [0, 45, 90, 135, 180, -135, -90, -45] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
         self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
         
     def reset(self, seed=None, options=None):
@@ -40,6 +40,8 @@ class Moving_sofa_env(gym.Env):
         # take action
         self.shape.rotate(self.board, degrees = action)
         hit_wall = self.shape.moveForward(self.board, distance = self.board.h)
+        self.shape.move_to_box_center(self.board)
+        
         
         # check if done
         done = self.board.is_finished(self.shape)
@@ -51,12 +53,14 @@ class Moving_sofa_env(gym.Env):
         info = {}
         
         if done == True:
+            print(reward)
+            print(previous_distance, '-', self.board.get_distance_value(self.shape), '=', reward)
             return None, reward, done, False, info
 
         # get state
-        state = self.board.get_box(self.shape) # @TODO: check in which state the new shape ends up return that state 
-
+        state = self.board.get_box(self.shape) # check in which state the new shape ends up return that state 
         #print("state: ", state)
+        #print(reward)
 
         return state, reward, done, False, info
     
