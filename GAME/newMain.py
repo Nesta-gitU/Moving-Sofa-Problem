@@ -21,7 +21,7 @@ pygame.init()
 #clock = pygame.time.Clock()
 
 MOVEEVENT = pygame.USEREVENT + 1 # this is just defining some event that we can use later (with integer key)
-pygame.time.set_timer(MOVEEVENT, 10000)
+pygame.time.set_timer(MOVEEVENT, 30)
 
 # use the font arial
 load_from_file = False
