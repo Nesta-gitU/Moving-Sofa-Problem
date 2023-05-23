@@ -4,43 +4,43 @@ from shapely import Polygon, Point
 import gymnasium as gym
 import numpy as np
 import copy 
+import math
 
 class Moving_sofa_env(gym.Env):
     metadata = {"render_modes": []} #only allow not rendering (= None) for optimal cloud compatibility
 
     def __init__(self) -> None:
-        point = Point(0.1000, 0.5000)
+        self.board = Board.Board()
         self.buffer = 0.1
-        points_list = self.getPointList(point)
+
+        points_list = self.getPointList()
         self.polygon = Polygon(points_list)
         self.shape = Shape.Shape(polygon = self.polygon)
-        self.board = Board.Board()
-       
 
+        self.weight1 = 1
         self.render_mode = None
-
-        self.action_space = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
-        #self.action_space1 = [-80, -70, -60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80] #, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
-        #self.action_space2 = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160 ,170]
-
-        #self.action_space = copy.deepcopy(self.action_space1)
-        # The action space above is a fun example of reward function goes wrong, it has no incentive to actually finish so just goes -90, 90 to optimize reward. 
-        # I guess one solution would be two Q-table for section (1) and section (2) of the corridor or we could actually just have two action spaces and that would do the same. Or a time step based negative reward, but that would counter the size optimizater. 
+        #                    0   1   2   3    4     5     6    7
+        self.action_space = [45, 90, 135, 180, -135, -90, -45, 0] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
         self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
         
-    def reset(self, seed=None, options=None):
+    def reset(self, seed=None, options=None, start_point = None):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
 
         #reset the action space
         #self.action_space = copy.deepcopy(self.action_space1)
 
-        #choose a random start point 
-        new_x = 0.1
-        new_y = self.np_random.uniform(0+self.buffer, 1-self.buffer)
-        point = Point(new_x, new_y)
-        self.polygon = Polygon(self.getPointList(point))
+        #if(start_point == None):
+        #    #choose a random start point 
+        #    new_x = 0.1
+        #    new_y = self.np_random.uniform(0+self.buffer, 1-self.buffer)
+        #    point = Point(new_x, new_y)
+        #    self.polygon = Polygon(self.getPointList(point))
 
+        #else:
+        #   self.polygon = Polygon(self.getPointList(start_point))
+
+        self.polygon = Polygon(self.getPointList())
         # Reset the board and shape
         self.shape = Shape.Shape(self.polygon)
         self.board = Board.Board()
@@ -53,24 +53,27 @@ class Moving_sofa_env(gym.Env):
         return state, info
     
     def step(self, action):
-        #previous_distance = self.board.get_distance_value(self.shape)
-        previous_shape = copy.deepcopy(self.shape)
+        previous_distance = self.board.get_distance_value(self.shape)
+        #previous_shape = copy.deepcopy(self.shape)
 
         # take action
         self.shape.rotate(self.board, degrees = action)
         hit_wall = self.shape.moveForward(self.board, distance = self.board.h)
+        self.shape.move_to_box_center(self.board)
+        
         
         # check if done
         done = self.board.is_finished(self.shape)
 
         # get reward
         #reward = self.get_reward(previous_distance, hit_wall, done)
-        reward = self.get_area_reward(previous_shape, hit_wall=hit_wall, action = action)
+        reward = self.get_weighted_reward(previous_distance=previous_distance, hit_wall=hit_wall, done=done)
 
          # get info
         info = {}
         
         if done == True:
+            #reward += 100
             return None, reward, done, False, info
         #if self.shape.polygon.centroid.x > 3:
         #    #print('hello')
@@ -83,10 +86,30 @@ class Moving_sofa_env(gym.Env):
 
         return state, reward, done, False, info
     
-    def getPointList(self, point):
+    def getPointList(self, point = None):
+
+        if point == None:
+            point = self.get_middle_box_center()
     
         point_list = point.buffer(self.buffer).exterior.coords
         return point_list
+    
+    def get_middle_box_center(self) -> Point:
+        n_height = 1/self.board.h
+
+        if n_height % 2 == 0: #even
+            row_index = n_height/2 + 1 - 1 #-1 cause 0 indexing
+        else: #uneven 
+            row_index = math.ceil(n_height/2) - 1 #-1 cause 0 index
+
+        col_index = 0 #first column 
+
+        point = self.board.box_centers[int(row_index), col_index]
+
+        return point 
+
+
+
     
     def get_distance_reward(self, previous_distance, hit_wall, done):
         ### note for myself ###
@@ -113,4 +136,21 @@ class Moving_sofa_env(gym.Env):
         if hit_wall == True:
             reward -= 10
         #print(area)
+        return reward
+    
+    def get_weighted_reward(self, previous_distance, hit_wall, done):
+        reward1 =  previous_distance - self.board.get_distance_value(self.shape) 
+        if reward1 < 0:
+            reward1 = reward1 * 2
+        #elif reward1 == 0:
+        #    reward1 = -self.board.h
+
+        reward2 = self.board.horizontal_field.intersection(self.shape.rectangle_list[-1]).area
+        
+        weight2 = 1 - self.weight1
+        reward = self.weight1 * reward1 + weight2 * reward2
+        if hit_wall == True:
+            #reward -= 10
+            pass
+
         return reward

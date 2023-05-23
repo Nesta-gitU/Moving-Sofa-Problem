@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image 
 import matplotlib.pyplot as plt
 import pygame
-from shapely.geometry import Point, Polygon, box, LineString
+from shapely.geometry import Point, Polygon, box, LineString, GeometryCollection
 from shapely import validation
 
 #Board should only be for display. And to store the boundaries. 
@@ -11,7 +11,10 @@ class Display_board:
   SCALE = 100
   BOARDSIZE = 10 * SCALE
 
-  def __init__(self):
+  def __init__(self, show_largest = False):
+    #sanity check?
+    self.show_largest = show_largest
+    
     #config
     self.font = pygame.font.SysFont('arial', 24)
     self.polygon_color = (0, 0, 255)  # blue
@@ -61,6 +64,9 @@ class Display_board:
     # draw the current rectangle on the screen
     pygame.draw.polygon(self.scrn, (0,0,0), self.exterior_coords_rectangle, self.polygon_thickness)
 
+    # draw largest on the screen
+    if self.show_largest:
+       pygame.draw.polygon(self.scrn, (6,255,200), self.exterior_coords_largest, self.polygon_thickness)
 
     # draw the forward circle on the screen
     pygame.draw.polygon(self.scrn, self.forward_circle_color, self.forward_circle_coords, width=0)
@@ -84,6 +90,9 @@ class Display_board:
     self.exterior_coords = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords(which = 'polygon')]
 
     self.exterior_coords_rectangle = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords(which = 'boundary', horizontal_boundary = self.horizontal_field)]
+  
+    if self.show_largest:
+      self.exterior_coords_largest = [(x * self.SCALE, y * self.SCALE) for x, y in shape.getExteriorCoords(which = 'largest')]
 
     # get the forward point for the board
     forward_point = Point(shape.getForwardPoint().x * self.SCALE, shape.getForwardPoint().y * self.SCALE) 
@@ -96,16 +105,29 @@ class Display_board:
 
   def showPoly(self, poly, color = (200,30,40)):
     # show the polygon on the screen
-    poly = [(x * self.SCALE, y * self.SCALE) for x, y in poly.exterior.coords]
-    pygame.draw.polygon(self.scrn, color, poly, self.polygon_thickness)
-    pygame.display.update()
+    if poly.is_valid and isinstance(poly, Polygon):
+      if len(poly.exterior.coords)<2:
+        return
+      poly = [(x * self.SCALE, y * self.SCALE) for x, y in poly.exterior.coords]
+      pygame.draw.polygon(self.scrn, color, poly, self.polygon_thickness)
+      pygame.display.update()
+
+    elif poly.is_valid and isinstance(poly, GeometryCollection):
+      for i in range(len(poly.geoms)):          # copilot suggesting recursion lol, I guess this works though
+        self.showPoly(poly.geoms[i], color) 
+      #try:
+      #  poly = [(x * self.SCALE, y * self.SCALE) for x, y in poly.exterior.coords]
+      #  pygame.draw.polygon(self.scrn, color, poly, self.polygon_thickness)
+      #  pygame.display.update()
+      #except:
+      #  print('error')
 
   def displayBounds(self):
     # -1's cause the booard is 4*100 but the last pixel is 399 (fuck past me haha)
 
-    display_boundary1 = Polygon([(0, 1*self.SCALE), (3*self.SCALE-1, 1*self.SCALE), (3*self.SCALE-1, 4*self.SCALE-1), (0, 4*self.SCALE-1)]) 
+    display_boundary1 = Polygon([(0, 1*self.SCALE), (3*self.SCALE-1, 1*self.SCALE), (3*self.SCALE-1, 6*self.SCALE-1), (0, 6*self.SCALE-1)]) 
     display_boundary2 = Polygon([(0, 0), (4*self.SCALE-1, 0), (4*self.SCALE-1, -4*self.SCALE-1), (0, -4*self.SCALE-1)])
-    display_boundary3 = Polygon([(4*self.SCALE-1, 0), (4*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 4*self.SCALE-1), (8*self.SCALE-1, 0)])
+    display_boundary3 = Polygon([(4*self.SCALE-1, 0), (4*self.SCALE-1, 6*self.SCALE-1), (8*self.SCALE-1, 6*self.SCALE-1), (8*self.SCALE-1, 0)])
     display_boundary4 = Polygon([(3*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 4*self.SCALE-1), (4*self.SCALE, 5*self.SCALE-1), (3*self.SCALE, 5*self.SCALE-1),])
     display_boundary5 = Polygon([(0, 0), (0, 1*self.SCALE), (-1*self.SCALE, 1*self.SCALE), (-1*self.SCALE, 0)])
 
@@ -113,7 +135,7 @@ class Display_board:
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary2.exterior.coords, self.polygon_thickness)
     pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary3.exterior.coords, self.polygon_thickness)
     #pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary4.exterior.coords, self.polygon_thickness)
-    #pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
+    pygame.draw.polygon(self.scrn, (255, 0, 0), display_boundary5.exterior.coords, self.polygon_thickness)
 
     display_finish_line = Polygon([((3-.01)*self.SCALE, 3.5*self.SCALE), ((4-0.01)*self.SCALE, 3.5*self.SCALE), ((4-0.01)*self.SCALE, 3.6*self.SCALE), ((3-0.01)*self.SCALE, 3.6*self.SCALE)])
     pygame.draw.polygon(self.scrn, (0, 0, 0), display_finish_line.exterior.coords, 0)
