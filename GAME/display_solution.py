@@ -60,7 +60,7 @@ def main():
 
     rewards = []
 
-    for episode in actions_all_episodes.columns:
+    for episode in [actions_all_episodes.columns[-1]]:
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)

@@ -56,7 +56,7 @@ class Board:
     self.field = Polygon([(-4, 0), (-4, 1), (3-0.01, 1), (3-0.01, 8), (4-0.01, 8), (4-0.01, 0), (-4, 0)])
 
   def init_boxes(self):
-    self.h = 0.5
+    self.h = 1/3
     wanted_width = int(1/self.h)
     stack_one_two = int(3/self.h) + int((4 + 1)/self.h)  #section (1) + "rotated" section 2, 4+1 because I want one more box on the bottom to stop errors
 

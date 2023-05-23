@@ -3,18 +3,19 @@ import Shape
 from shapely import Polygon, Point
 import gymnasium as gym
 import numpy as np
+import math
 
 
 class Moving_sofa_env(gym.Env):
     metadata = {"render_modes": []} #only allow not rendering (= None) for optimal cloud compatibility
 
     def __init__(self) -> None:
+        self.board = Board.Board()
+        self.buffer = 0.1
         points_list = self.getPointList()
         self.polygon = Polygon(points_list)
         self.shape = Shape.Shape(polygon = self.polygon)
-        self.board = Board.Board()
-       
-
+    
         self.render_mode = None
 
         self.action_space = [0, 45, 90, 135, 180, -135, -90, -45] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
@@ -65,10 +66,25 @@ class Moving_sofa_env(gym.Env):
         return state, reward, done, False, info
     
     def getPointList(self):
-        point = Point(0.1000, 0.5000)
+        point = self.get_middle_box_center()
     
-        point_list = point.buffer(0.1).exterior.coords
+        point_list = point.buffer(self.buffer).exterior.coords
         return point_list
+    
+    def get_middle_box_center(self) -> Point:
+        n_height = 1/self.board.h
+
+        if n_height % 2 == 0: #even
+            row_index = n_height/2 + 1 - 1
+        else: #uneven 
+            row_index = math.ceil(n_height/2) -1
+
+        col_index = 0 #first column 
+
+        point = self.board.box_centers[int(row_index), col_index]
+
+        return point 
+
     
     def get_reward(self, previous_distance, hit_wall, done):
         ### note for myself ###
