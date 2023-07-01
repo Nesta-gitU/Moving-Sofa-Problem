@@ -1,6 +1,6 @@
 import Board
 import Shape
-from shapely import Polygon, Point
+from shapely import Polygon, Point, LineString
 import gymnasium as gym
 import numpy as np
 import math
@@ -37,6 +37,7 @@ class Moving_sofa_env(gym.Env):
     
     def step(self, action):
         previous_distance = self.board.get_distance_value(self.shape)
+        previous_centroid = self.shape.polygon.centroid
 
         # take action
         self.shape.rotate(self.board, degrees = action)
@@ -56,6 +57,18 @@ class Moving_sofa_env(gym.Env):
         if done == True:
             print(reward)
             print(previous_distance, '-', self.board.get_distance_value(self.shape), '=', reward)
+                        # calculate the reward differently 
+            # Define the line segment
+            line_segment = LineString([previous_centroid, self.shape.polygon.centroid])
+
+            # Define the horizontal line
+            horizontal_line = LineString([(0, 4), (10, 4)])
+
+            # Find the intersection point
+            intersection = line_segment.intersection(horizontal_line)
+
+            reward = previous_distance - intersection.distance(self.board.distance_point)
+            #reward = reward + 100
             return None, reward, done, False, info
 
         # get state
@@ -96,7 +109,7 @@ class Moving_sofa_env(gym.Env):
         reward = previous_distance - self.board.get_distance_value(self.shape) 
         #print("previous_distance: ", previous_distance)
         #print("current_distance: ", self.board.get_distance_value(self.shape))
-        reward = reward * 100
+        #reward = reward * 100
         if hit_wall == True:
             #reward -= 10
             pass
