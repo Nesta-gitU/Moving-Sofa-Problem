@@ -36,7 +36,10 @@ class Shape:
 
         #self.current_rectangle = shapely.set_precision(geometry = self.current_rectangle, grid_size = 0.0001)
         self.rectangle_list = []
-        self.rectangle_list.append(copy.deepcopy(self.current_rectangle)) # incorrect cause no boundary difference is taken
+        self.rectangle_list.append(copy.deepcopy(self.current_rectangle)) # incorrect cause no boundary difference is taken but it really does not matter right cause its sqaure differenced in the reward anyway
+        self.extra_rectangle_list = []
+        self.extra_rectangle_list.append(copy.deepcopy(self.current_rectangle))
+
 
 
     
@@ -196,7 +199,21 @@ class Shape:
             hit_wall = True
         return hit_wall
             
+    def make_rotation_projections(self, board, degrees, old_rectangle):
+        # just always add extra clockwise rotations, and then if I want to use size as an evaluation I can just turn of the extra rotation projects and make it slightly more rough. 
+        # yes thats fine, then after this just start writing the paper.
 
+        degree_list = np.linspace(self.previous_rotation, degrees, num = 10)
+
+        for degree in degree_list:
+            old_rectangle = affinity.rotate(old_rectangle, degree - self.previous_rotation, origin=self.polygon.centroid)
+            boundary_difference = self.get_boundary_difference(board, old_rectangle)
+            boundary_difference = affinity.rotate(boundary_difference, -degree, origin=self.polygon.centroid)
+            #board.showPoly(boundary_difference)
+            boundary_difference = affinity.translate(boundary_difference, xoff = -self.total_x_movement, yoff = -self.total_y_movement)
+            self.extra_rectangle_list.append(boundary_difference)
+
+        return
 
     
     def rotate(self, board, degrees):
@@ -219,8 +236,11 @@ class Shape:
             self.forward_point = affinity.rotate(self.forward_point, degrees - self.previous_rotation, origin=self.polygon.centroid) #THIS SHOULD NOT BE TURNED OF JUST A TEST definetly some possibilities but ignore them for now
 
             # set currect rectangle to new rotated rectangle
+            old_rectangle = copy.deepcopy(self.current_rectangle)
             new_rectangle = affinity.rotate(self.current_rectangle, degrees - self.previous_rotation, origin=self.polygon.centroid) # copilot making assumptions i didnt even think about yet
             self.current_rectangle = new_rectangle
+
+            self.make_rotation_projections(board, degrees, old_rectangle)
 
             if self.delay_rectangles:
                 if self.polygon.centroid.x > 1:
@@ -284,8 +304,10 @@ class Shape:
         # add the ajustment to the total movement. 
         self.total_x_movement += dx
         self.total_y_movement += dy
-
+        
+        # moving to a box center we can not have a collision
         # set current rectangle to new translated rectangle and also unrotate it 
+        
         new_rectangle = affinity.translate(self.current_rectangle, xoff = pointToAdd.x, yoff = pointToAdd.y)
         self.current_rectangle = new_rectangle
             
@@ -312,9 +334,58 @@ class Shape:
             self.rectangle_list.append(boundary_difference)
 
             #print(isinstance(boundary_difference, Polygon))
-            #print(shapely.distance(self.polygon, self.current_rectangle.boundary))    
+            #print(shapely.distance(self.polygon, self.current_rectangle.boundary))
+            # 
+    def move_forward_and_to_center(self, board):
+        original_center = copy.deepcopy(self.polygon.centroid)
+        original_rectangle = copy.deepcopy(self.current_rectangle)
+        original_polygon = copy.deepcopy(self.polygon)
+        original_total_x_movement = copy.deepcopy(self.total_x_movement)
+        original_total_y_movement = copy.deepcopy(self.total_y_movement)
+        original_previous_rotation = copy.deepcopy(self.previous_rotation)
+
+        self.moveForward(board, distance = board.h)
+        self.move_to_box_center(board)
+        center_after_move = copy.deepcopy(self.polygon.centroid)
+
+        dx = center_after_move.x - original_center.x
+        dy = center_after_move.y - original_center.y
 
         
+
+        self.extra_move_rectangles(board, dx, dy, original_rectangle, original_polygon, original_previous_rotation, original_total_x_movement, original_total_y_movement)
+
+
+        
+    def extra_move_rectangles(self, board, dx_total, dy_total, current_rectangle, original_polygon, previous_rotation, total_x_movement, total_y_movement):
+        # Number of intermediary points
+        n = 5
+
+        # Calculate the incremental dx and dy values
+        dx_increment = dx_total / (n + 1)
+        dy_increment = dy_total / (n + 1)
+
+        # Generate intermediary points
+        intermediary_points = []
+        for i in range(1, n + 1):
+            dx = i * dx_increment
+            dy = i * dy_increment
+            intermediary_points.append(Point(dx, dy))
+
+        for point in intermediary_points:
+            polygon = affinity.translate(original_polygon, point.x, point.y)
+            # set current rectangle to new translated rectangle and also unrotate it 
+            rectangle = affinity.translate(current_rectangle, xoff = point.x, yoff = point.y)
+            boundary_difference = self.get_boundary_difference(board, rectangle)
+            
+
+            #stop changing this it works perfectly
+            #print(self.total_x_movement, self.total_y_movement)
+            boundary_difference = affinity.rotate(boundary_difference, -previous_rotation, origin = polygon.centroid)
+            boundary_difference = affinity.translate(boundary_difference, xoff = -total_x_movement - point.x, yoff = -total_y_movement - point.y)
+            self.extra_rectangle_list.append(boundary_difference)
+
+
 
 
 
@@ -335,16 +406,20 @@ class Shape:
             polygon = copy.deepcopy(self.current_rectangle)
 
         if which == 'boundary':
-            polygon2 = copy.deepcopy(horizontal_boundary.intersection(self.rectangle_list[-1]))
-            polygon = copy.deepcopy(self.rectangle_list[-1])
+            polygon2 = copy.deepcopy(horizontal_boundary.intersection(self.extra_rectangle_list[-1]))
+            polygon = copy.deepcopy(self.extra_rectangle_list[-1])
             #print(polygon2.area)
         return list(polygon.exterior.coords)
     
     def getLargeRectangle(self):
         
         final_poly = self.rectangle_list[0]
+        print(len(self.extra_rectangle_list))
+        print(len(self.rectangle_list))
 
-        for poly in self.rectangle_list[1:]:
+        total_list = self.rectangle_list[1:] + self.extra_rectangle_list
+
+        for poly in total_list:
             #if poly.is_valid and isinstance(poly, Polygon):
             final_poly = final_poly.intersection(poly)
                 #print(final_poly) these are all empty so lets print first 

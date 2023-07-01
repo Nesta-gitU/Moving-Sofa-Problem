@@ -1,6 +1,6 @@
 import Board
 import Shape
-from shapely import Polygon, Point
+from shapely import Polygon, Point, LineString
 import gymnasium as gym
 import numpy as np
 import copy 
@@ -11,15 +11,15 @@ class Moving_sofa_env(gym.Env):
 
     def __init__(self) -> None:
         self.board = Board.Board()
-        self.buffer = 0.1
+        self.buffer = 0.1 # needs to be smaller than self.h
 
         points_list = self.getPointList()
         self.polygon = Polygon(points_list)
         self.shape = Shape.Shape(polygon = self.polygon)
 
-        self.weight1 = 1
+        self.weight1 = 0.9
         self.render_mode = None
-        #                    0   1   2   3    4     5     6    7
+        #                    0   1   2     3    4     5    6   7
         self.action_space = [45, 90, 135, 180, -135, -90, -45, 0] #, -5, -10, -15, -20, -25]# -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90]
         self.state_space = np.arange(self.board.total_boxes) # (x,y) of the boxes that make up the states. FIRST STATE SHOULD BE INITIAL STATE
         
@@ -53,6 +53,7 @@ class Moving_sofa_env(gym.Env):
         return state, info
     
     def step(self, action):
+        previous_centroid = self.shape.polygon.centroid
         previous_distance = self.board.get_distance_value(self.shape)
         #previous_shape = copy.deepcopy(self.shape)
 
@@ -73,8 +74,31 @@ class Moving_sofa_env(gym.Env):
         info = {}
         
         if done == True:
+            # calculate the reward differently 
+            # Define the line segment
+            line_segment = LineString([previous_centroid, self.shape.polygon.centroid])
+
+            # Define the horizontal line
+            horizontal_line = LineString([(0, 4), (10, 4)])
+
+            # Find the intersection point
+            intersection = line_segment.intersection(horizontal_line)
+
+            reward = previous_distance - intersection.distance(self.board.distance_point)
+            
             #reward += 100
-            return None, reward, done, False, info
+            polygon = Polygon(self.getPointList())
+            # Reset the board and shape
+            shape = Shape.Shape(polygon)
+            board = Board.Board()
+       
+
+            # reset should return the initial state and some information
+            next_state = board.get_box(shape)
+
+            
+
+            return next_state, reward, done, False, info
         #if self.shape.polygon.centroid.x > 3:
         #    #print('hello')
         #    self.action_space = copy.deepcopy(self.action_space2)
@@ -90,7 +114,7 @@ class Moving_sofa_env(gym.Env):
 
         if point == None:
             point = self.get_middle_box_center()
-    
+
         point_list = point.buffer(self.buffer).exterior.coords
         return point_list
     
@@ -152,5 +176,5 @@ class Moving_sofa_env(gym.Env):
         if hit_wall == True:
             #reward -= 10
             pass
-
+        
         return reward
