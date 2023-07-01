@@ -7,7 +7,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 
-np.random.seed(0)
+#np.random.seed(0)
 
 def get_solution(N, env, Qlearner):
     
@@ -30,14 +30,16 @@ def get_solution(N, env, Qlearner):
         states_seen.append(state)
         distances.append(env.board.get_distance_value(env.shape))
 
+        Qlearner.update_q_table(state, action_index, reward, next_state)
+        
         if terminated or truncated:
             return actions_taken, 0, states_seen, distances, total_reward
 
         
-
+        
         state = next_state
 
-    Qlearner.update_q_table(state, action_index, reward, next_state)
+    
     
     loss = env.board.get_distance_value(env.shape)
     return actions_taken, loss, states_seen, distances, total_reward
@@ -47,7 +49,7 @@ def main():
     #######parameters#######
     action_list = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90] #because of the weird grid no minusus. I guess just put minusus in the final paper. 
     N = 50 #number of Decision Epochs
-    n_episodes = 150
+    n_episodes = 500 
 
     env = Moving_sofa_env.Moving_sofa_env()
     Qlearner = Qlearning.Qlearning(n_states= len(env.state_space), n_actions=len(env.action_space))
@@ -62,7 +64,7 @@ def main():
     for i in range(n_episodes):
         actions_taken, loss, states_seen, distances, total_reward = get_solution(N, env, Qlearner)
         actions_all_episodes.append(actions_taken)
-        states_all_episodes.append(states_seen)
+        states_all_episodes.append(states_seen)  
         distances_per_episode.append(distances)
         total_reward_per_episode.append(total_reward)
         loss_per_episode.append(loss)
@@ -74,7 +76,7 @@ def main():
     Q_table_to_csv(Q_table_per_episode, N)
     
     #export such that I can read It and check correctness
-    #pd.DataFrame(Q_table_per_episode[19]).to_csv("10thQtable.csv")
+    pd.DataFrame(Q_table_per_episode[-1]).to_csv("lastQtable.csv")
 
 
     
@@ -84,7 +86,7 @@ def main():
     # create a dataframe from the dictionary
     df = pd.DataFrame.from_dict(data_dict, orient='index').transpose()
 
-    df.to_csv('actions.csv', index=False)
+    df.to_csv('C:/Nesta/Bachelor thesis/Moving Couch split display and solution/actions.csv', index=False)
 
      # create a dictionary where the keys are the column names and the values are the inner lists
     data_dict2 = {f"actions_taken{i+1}": inner_list for i, inner_list in enumerate(states_all_episodes)}
@@ -120,9 +122,13 @@ def  Q_table_to_csv(Q_table_per_episode, N):
             action = env.action_space[index]
 
             next_state, reward, terminated, truncated, info = env.step(action)
-            if terminated or truncated:
-                break
+
             action_list.append(action)
+
+            if terminated or truncated:
+                moves_needed_to_finish = i
+                break 
+            
             
             state = next_state
         
@@ -135,6 +141,6 @@ def  Q_table_to_csv(Q_table_per_episode, N):
     # create a dataframe from the dictionary
     df = pd.DataFrame.from_dict(data_dict, orient='index').transpose()
 
-    df.to_csv('Q_actions.csv', index=False)
+    df.to_csv('C:/Nesta/Bachelor thesis/Moving Couch split display and solution/Q_actions.csv', index=False)
 
 main()
