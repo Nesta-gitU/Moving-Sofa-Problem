@@ -7,7 +7,7 @@
 - Episodes containing only greedy actions over time -> full exploitation: [Link to Exploitation Video](https://youtu.be/e52_krQXRjU)
 
 ### Area Model
-- Training: [Link to Training Video]([area_model_training_video](https://youtu.be/90EQJQN1TgY))
+- Training: [Link to Training Video](https://youtu.be/90EQJQN1TgY)
 - Episodes containing only greedy actions over time -> full exploitation: [Link to Exploitation Video](https://youtu.be/SHSkaIPReEs)
 - Final approximate solution and shape of sofa: [Link to Final Solution Video](https://youtube.com/shorts/o4nO2ZuzGHk?feature=share)
   
