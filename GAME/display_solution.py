@@ -7,17 +7,19 @@ from shapely.geometry import Point, Polygon
 import Moving_sofa_env
 import matplotlib.pyplot as plt
 import math
+import re
 
 pygame.init()
 
-def display_solution(action_list, h, N, states = None):
+
+def display_solution(action_list, h, N, episode_number, states = None):
     env = Moving_sofa_env.Moving_sofa_env()
     point_list = getPointList(env)
     polygon = Polygon(point_list)
     shape = Shape.Shape(polygon = polygon)
     board = Board.Board()
 
-    display = Display_board.Display_board()
+    display = Display_board.Display_board(epsiode_number= episode_number)
     
     display.setShape(shape)
     display.show() 
@@ -85,6 +87,9 @@ def main():
     h = Board.Board().h
     print(h)
 
+    display = Display_board.Display_board(epsiode_number= 1)
+    pygame.time.wait(10000)
+
     rewards = []
     distances = []
     distances_travelled = []
@@ -92,23 +97,37 @@ def main():
 
     n_episodes = len(actions_all_episodes.columns)
 
-    for episode in actions_all_episodes.columns[400:500]:
-        print(episode)
+    print(actions_all_episodes[actions_all_episodes.columns[-1]].dropna().tolist())
+
+    last_row = actions_all_episodes[actions_all_episodes.columns[-1]]
+    print(last_row)
+    print(actions_all_episodes[actions_all_episodes.columns[-1]].equals(last_row))
+    matching_columns = [col for col in actions_all_episodes.columns if actions_all_episodes[col].equals(last_row)] 
+    print(matching_columns)
+
+    # Get the index of the matching column
+    column_index = actions_all_episodes.columns.get_loc(matching_columns[0])
+
+    print(column_index + 1)
+
+    for episode in actions_all_episodes.columns:
+        #print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
-        print(actions)
+        #print(actions)
         
+        episode_number = extract_number(episode)
         #states = states_seen[episode].dropna()
         #states = list(states)
         #print(states)
         N = len(actions)
-        reward, distance, distance_travelled, finished =display_solution(actions, h, N)
+        reward, distance, distance_travelled, finished =display_solution(actions, h, N, episode_number)
         rewards.append(reward)
         distances.append(distance)
         distances_travelled.append(distance_travelled)
         finished_list.append(finished)
 
-    print('final_distance_travelled:', distances_travelled[-1])
+    #print('final_distance_travelled:', distances_travelled[-1])
 
     makeplots(n_episodes, rewards, distances, distances_travelled, finished_list)
     
@@ -136,5 +155,13 @@ def makeplots(n_episodes, rewards, distances, distances_travelled, finished_list
     plt.grid(True)
     #plt.colorbar(label='Color')
     plt.show()
+
+def extract_number(string):
+    match = re.search(r'\d+$', string)
+    if match:
+        number = int(match.group())
+        return number
+    else:
+        return None
 
 main()

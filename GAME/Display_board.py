@@ -7,11 +7,14 @@ from shapely import validation
 
 #Board should only be for display. And to store the boundaries. 
 #So like the display in the snake game
+
+
 class Display_board:
   SCALE = 100
-  BOARDSIZE = 10 * SCALE
+  BOARDSIZE = 6 * SCALE
 
-  def __init__(self):
+  def __init__(self, epsiode_number):
+    self.n_episodes = epsiode_number
     #config
     self.font = pygame.font.SysFont('arial', 24)
     self.polygon_color = (0, 0, 255)  # blue
@@ -57,6 +60,11 @@ class Display_board:
     # display the value function
     img = self.font.render('Distance = ' + str(self.distance_value), True, (0, 0, 255))
     self.scrn.blit(img, (10, 350))
+
+    # display the episode number
+    img = self.font.render('Episode  = ' + str(self.n_episodes), True, (0, 0, 255))
+    self.scrn.blit(img, (10, 300))
+
 
     #update screen 
     pygame.display.update()
