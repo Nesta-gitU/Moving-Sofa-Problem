@@ -414,8 +414,8 @@ class Shape:
     def getLargeRectangle(self):
         
         final_poly = self.rectangle_list[0]
-        print(len(self.extra_rectangle_list))
-        print(len(self.rectangle_list))
+        #print(len(self.extra_rectangle_list))
+        #print(len(self.rectangle_list))
 
         total_list = self.rectangle_list[1:] + self.extra_rectangle_list
 

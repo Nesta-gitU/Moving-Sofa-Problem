@@ -8,18 +8,21 @@ import Moving_sofa_env
 import matplotlib.pyplot as plt
 import time
 from shapely import affinity
+import re
 
 pygame.init()
 
 display = Display_board.Display_board()
 
-def display_solution(action_list, h, N, states = None):
+def display_solution(action_list, h, N, episode_number, states = None):
     env = Moving_sofa_env.Moving_sofa_env()
     board = Board.Board()
     point_list = env.getPointList()
     polygon = Polygon(point_list)
     shape = Shape.Shape(polygon = polygon, delay_rectangles= False)
     #display = Display_board.Display_board()
+
+    display.episode_number = episode_number 
    
 
     total_reward = 0
@@ -51,19 +54,19 @@ def display_solution(action_list, h, N, states = None):
         total_reward += reward
 
     largest = shape.getLargeRectangle()
-    print('hallo:', shape.getLargeRectangle().area)
+    #print('hallo:', shape.getLargeRectangle().area)
     distance = board.get_distance_value(shape)
 
     if distance > 0:
         area = 0
-        print('here')
+        #print('here')
     else:
         distance = 0
         area = largest.area
     
     return total_reward/N, largest, distance, area
 
-def checkPoly(action_list, h, N, largest_polygon):
+def checkPoly(action_list, h, N, largest_polygon, episode_number):
     env = Moving_sofa_env.Moving_sofa_env()
     board = Board.Board()
     shape = Shape.Shape(polygon=largest_polygon, delay_rectangles=False, collisionOn=False)
@@ -72,6 +75,7 @@ def checkPoly(action_list, h, N, largest_polygon):
     polygon = Polygon(point_list)
     shape = Shape.Shape(polygon = polygon, delay_rectangles= False, largest= largest_polygon)
     display = Display_board.Display_board(show_largest=True)
+    display.episode_number = episode_number
 
     total_reward = 0
 
@@ -113,6 +117,8 @@ def main1():
     actions_all_episodes = pd.read_csv('C:/Nesta/Bachelor thesis/Moving Couch split Area Value/Q_actions.csv')
     states_seen = pd.read_csv('states_seen.csv')
 
+    #pygame.time.wait(5000)
+
     h = Board.Board().h
 
     n_episodes = len(actions_all_episodes.columns) # put the same slicing here as below 
@@ -136,16 +142,17 @@ def main1():
     print(column_index + 1)
     
 
-    for episode in actions_all_episodes.columns: 
+    for episode in actions_all_episodes.columns[205:500:10]: 
         print(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
+        episode_number = extract_number(episode)
         
         #states = states_seen[episode].dropna()
         #states = list(states)
         #print(states)
         N = len(actions)
-        reward, largest, distance, area  = display_solution(actions, h, N)
+        reward, largest, distance, area  = display_solution(actions, h, N, episode_number)
         rewards.append(reward)
         distances.append(distance)
         areas.append(area)
@@ -154,8 +161,8 @@ def main1():
 
     makeplots(n_episodes, rewards, distances, areas)
 
-    print(actions_all_episodes[actions_all_episodes.columns[-1]].dropna().tolist())
-    print(areas[-1])
+    #print(actions_all_episodes[actions_all_episodes.columns[-1]].dropna().tolist())
+    #print(areas[-1])
 
     
 
@@ -185,17 +192,27 @@ def makeplots(n_episodes, rewards, distances, areas):
 def main2():
     actions_all_episodes = pd.read_csv('C:/Nesta/Bachelor thesis/Moving Couch split Area Value/Q_actions.csv')
     h = Board.Board().h
+    pygame.time.wait(5000)
 
     for episode in [actions_all_episodes.columns[-1]]: 
         print(episode)
+        episode_number = extract_number(episode)
         actions = actions_all_episodes[episode].dropna()
         actions = list(actions)
         N = len(actions)
-        reward, largest, distance, area  =display_solution(actions, h, N)
+        reward, largest, distance, area  =display_solution(actions, h, N, episode_number)
         print('hallo:', largest.area)
         display.showPoly(largest)
-        checkPoly(actions, h, N, largest)
+        checkPoly(actions, h, N, largest, episode_number)
 
     pygame.time.wait(1000)
 
-main2()
+def extract_number(string):
+    match = re.search(r'\d+$', string)
+    if match:
+        number = int(match.group())
+        return number
+    else:
+        return None
+
+main1()

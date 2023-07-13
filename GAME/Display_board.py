@@ -14,6 +14,8 @@ class Display_board:
   def __init__(self, show_largest = False):
     #sanity check?
     self.show_largest = show_largest
+
+    self.episode_number = 1
     
     #config
     self.font = pygame.font.SysFont('arial', 24)
@@ -79,6 +81,11 @@ class Display_board:
     # display the value function
     img = self.font.render('Distance = ' + str(self.distance_value), True, (0, 0, 255))
     self.scrn.blit(img, (10, 350))
+
+    # display the episode number
+    img = self.font.render('Episode  = ' + str(self.episode_number), True, (0, 0, 255))
+    self.scrn.blit(img, (10, 300))
+
 
 
 
